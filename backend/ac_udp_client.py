@@ -46,16 +46,16 @@ class ACUDPClient:
                 # Controlliamo la dimensione del pacchetto
                 if len(data) == 208:
                     unpacked = struct.unpack('<50s50sii50s50s', data)
-                    self.car_name = unpacked[0].decode('utf-8', 'ignore').strip('\x00')[0]
-                    self.driver_name = unpacked[1].decode('utf-8', 'ignore').strip('\x00')[0]
-                    self.track_name = unpacked[4].decode('utf-8', 'ignore').strip('\x00')[0]
+                    self.car_name = unpacked[0].decode('utf-8', 'ignore').strip('\x00').split('%')[0]
+                    self.driver_name = unpacked[1].decode('utf-8', 'ignore').strip('\x00').split('%')[0]
+                    self.track_name = unpacked[4].decode('utf-8', 'ignore').strip('\x00').split('%')[0]
                     break
                 elif len(data) == 408:
                     # Supporto futuro per Assetto Corsa Competizione
                     unpacked = struct.unpack('<100s100sii100s100s', data)
-                    self.car_name = unpacked[0].decode('utf-16-le', 'ignore').strip('\x00')[0]
-                    self.driver_name = unpacked[1].decode('utf-16-le', 'ignore').strip('\x00')[0]
-                    self.track_name = unpacked[4].decode('utf-16-le', 'ignore').strip('\x00')[0]
+                    self.car_name = unpacked[0].decode('utf-16-le', 'ignore').strip('\x00').split('%')[0]
+                    self.driver_name = unpacked[1].decode('utf-16-le', 'ignore').strip('\x00').split('%')[0]
+                    self.track_name = unpacked[4].decode('utf-16-le', 'ignore').strip('\x00').split('%')[0]
                     break
                 else:
                     # Scarta i pacchetti di telemetria (RTCarInfo) del tentativo precedente

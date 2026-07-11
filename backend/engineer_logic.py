@@ -2,6 +2,8 @@ import time
 import threading
 import pyttsx3
 import logging
+import queue
+import platform
 
 logger = logging.getLogger("VirtualEngineer")
 
@@ -10,30 +12,34 @@ class VirtualEngineerLogic:
     
     def __init__(self):
         self.last_warning_time = 0
-        self.COOLDOWN_SECONDS = 15 # Non parlare di continuo
+        self.COOLDOWN_SECONDS = 15
+        self.speech_queue = queue.Queue()
         
-        # Setup TTS (Isolato nel suo ecosistema)
-        self.tts_engine = pyttsx3.init()
-        self.tts_engine.setProperty('rate', 155)
+        threading.Thread(target=self._audio_worker, daemon=True).start()
+        logger.info("Thread Audio Avviato.")
         
-        voices = self.tts_engine.getProperty('voices')
+    def _audio_worker(self):
+        """Questo thread vive per sempre, preleva le frasi dalla coda e le legge ad alta voce."""
+        engine = pyttsx3.init()
+        engine.setProperty('rate', 155)
+        
+        voices = engine.getProperty('voices')
         for voice in voices:
             if "IT" in voice.id or "Italian" in voice.name:
-                self.tts_engine.setProperty('voice', voice.id)
+                engine.setProperty('voice', voice.id)
                 break
         
-        self.speech_lock = threading.Lock()
-        logger.info("Motore Sintesi Vocale Inizializzato.")
+        # Il loop infinito che ascolta la coda
+        while True:
+            text = self.speech_queue.get()
+            logger.info(f"[VOCE]: {text}")
+            engine.say(text)
+            engine.runAndWait()
+            self.speech_queue.task_done()
 
     def speak(self, text: str):
-        """Metodo per parlare senza bloccare il thread principale (Socket/Websocket)"""
-        def _speak_thread():
-            with self.speech_lock:
-                logger.info(f"[VOCE]: {text}")
-                self.tts_engine.say(text)
-                self.tts_engine.runAndWait()
-                
-        threading.Thread(target=_speak_thread, daemon=True).start()
+        """Invia un messaggio alla coda per farlo pronunciare al worker."""
+        self.speech_queue.put(text)
 
     def analyze(self, telemetry: dict):
         """Riceve il dizionario telemetrico pulito e decide se intervenire."""
@@ -53,7 +59,6 @@ class VirtualEngineerLogic:
         avg_front_slip = (abs(slip[0]) + abs(slip[1])) / 2
         avg_rear_slip = (abs(slip[2]) + abs(slip[3])) / 2
 
-        # Analisi Base (Da ampliare in futuro con temperature, usura, ecc.)
         if avg_front_slip > 0.12 and avg_rear_slip < 0.05 and speed > 50:
             self.speak("Rilevato sottosterzo in curva. Valuta di ammorbidire la barra antirollio anteriore.")
             self.last_warning_time = current_time
