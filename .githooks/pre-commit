@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e 
+
+echo "Starting pre-commit formatting and linting..."
+
+# --- BACKEND (Python) ---
+echo "Checking Backend..."
+cd backend
+# 1. Formatting
+python -m black .
+# 2. Linting & Type-checking
+flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+mypy . --ignore-missing-imports
+cd ..
+
+# --- FRONTEND (JS/TS) ---
+echo "Checking Frontend..."
+cd frontend
+# 1. Formatting
+npx prettier --write .
+# 2. Linting
+npm run lint
+cd ..
+
+echo "All checks passed successfully!"
