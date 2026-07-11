@@ -1,45 +1,33 @@
 import time
 import threading
-import pyttsx3
 import logging
-import queue
-import platform
+import subprocess
+import sys
+import os
 
 logger = logging.getLogger("VirtualEngineer")
 
 class VirtualEngineerLogic:
-    """Il cervello. Analizza la telemetria pulita e gestisce la sintesi vocale asincrona."""
+    """Il cervello. Analizza la telemetria e gestisce la sintesi vocale."""
     
     def __init__(self):
         self.last_warning_time = 0
         self.COOLDOWN_SECONDS = 15
-        self.speech_queue = queue.Queue()
-        
-        threading.Thread(target=self._audio_worker, daemon=True).start()
-        logger.info("Thread Audio Avviato.")
-        
-    def _audio_worker(self):
-        """Questo thread vive per sempre, preleva le frasi dalla coda e le legge ad alta voce."""
-        engine = pyttsx3.init()
-        engine.setProperty('rate', 155)
-        
-        voices = engine.getProperty('voices')
-        for voice in voices:
-            if "IT" in voice.id or "Italian" in voice.name:
-                engine.setProperty('voice', voice.id)
-                break
-        
-        # Il loop infinito che ascolta la coda
-        while True:
-            text = self.speech_queue.get()
-            logger.info(f"[VOCE]: {text}")
-            engine.say(text)
-            engine.runAndWait()
-            self.speech_queue.task_done()
+        self.worker_script = os.path.join(os.path.dirname(__file__), "tts_worker.py")
+        logger.info("Cervello Ingegnere Inizializzato.")
 
     def speak(self, text: str):
-        """Invia un messaggio alla coda per farlo pronunciare al worker."""
-        self.speech_queue.put(text)
+        """Usa un micro-processo separato per garantire che pyttsx3 non vada in crash col server asincrono."""
+        logger.info(f"[VOCE]: {text}")
+        
+        def _run_tts():
+            kwargs = {}
+            if sys.platform == "win32":
+                kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
+
+            subprocess.run([sys.executable, "-c", text], **kwargs)
+
+        threading.Thread(target=_run_tts, daemon=True).start()
 
     def analyze(self, telemetry: dict):
         """Riceve il dizionario telemetrico pulito e decide se intervenire."""
