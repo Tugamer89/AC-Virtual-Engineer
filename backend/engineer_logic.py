@@ -26,7 +26,7 @@ class VirtualEngineerLogic:
             if sys.platform == "win32":
                 kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
 
-            subprocess.run([sys.executable, "-c", text], **kwargs)
+            subprocess.run([sys.executable, self.worker_script, text], **kwargs)
 
         threading.Thread(target=_run_tts, daemon=True).start()
 
