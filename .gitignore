@@ -1,0 +1,33 @@
+# --- Virtual Environment ---
+
+venv/
+.venv/
+env/
+
+# --- Python ---
+
+pycache/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# --- Frontend React ---
+
+node_modules/
+dist/
+build/
+.next/
+
+# --- IDE & OS ---
+
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Sensitive or Local Data ---
+
+.env
+.env.local

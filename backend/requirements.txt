@@ -1,0 +1,5 @@
+# Server WebSocket asincrono
+websockets>=12.0
+
+# Sintesi vocale (Text-to-Speech)
+pyttsx3>=2.90
