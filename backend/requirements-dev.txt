@@ -1,5 +1,5 @@
 -r requirements.txt
 
-black
-flake8
-mypy
+black>=26.5
+flake8>=7.3
+mypy>=2.2
