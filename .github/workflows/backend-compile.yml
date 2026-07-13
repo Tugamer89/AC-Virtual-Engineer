@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os-name }}
+    name: Build on ${{ matrix.os_name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -25,19 +25,23 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
-            os-name: Linux
-            artifact_name: acve-backend-linux
-            executable_name: acve-backend
-          - os: windows-latest
-            os-name: Windows
-            artifact_name: acve-backend-windows
-            executable_name: acve-backend.exe
+            os_name: linux
+            arch: amd64
+            ext: ""
           - os: macos-latest
-            os-name: macOS
-            artifact_name: acve-backend-macos
-            executable_name: acve-backend
+            os_name: macos
+            arch: amd64 
+            ext: ""
+          - os: windows-latest
+            os_name: windows
+            arch: amd64
+            ext: ".exe"
+    
+    env:
+        executable_name: acve-backend-${{ matrix.os_name }}-${{ matrix.arch }}${{ matrix.ext }}
 
     steps:
+
       - name: Checkout Source Code
         uses: actions/checkout@v7
         with:
@@ -66,7 +70,7 @@ jobs:
         shell: bash
         run: |
           pyinstaller --onefile \
-                      --name="${{ matrix.executable_name }}" \
+                      --name="${{ env.executable_name }}" \
                       --windowed \
                       --hidden-import=pyttsx3.drivers \
                       --hidden-import=pyttsx3.drivers.sapi5 \
@@ -77,11 +81,11 @@ jobs:
       - name: Generate Artifact Attestation
         uses: actions/attest-build-provenance@v4
         with:
-          subject-path: dist/${{ matrix.executable_name }}
+          subject-path: dist/${{ env.executable_name }}
 
       - name: Upload binary to Release
         if: github.event_name == 'release' || github.event.inputs.tag_name != ''
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
-          files: dist/${{ matrix.executable_name }}
+          files: dist/${{ env.executable_name }}
