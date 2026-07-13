@@ -69,7 +69,7 @@ jobs:
       - name: Compile Backend with PyInstaller
         shell: bash
         run: |
-          pyinstaller --onefile \
+          pyinstaller --onefile --console \
                       --name="${{ env.executable_name }}" \
                       --windowed \
                       --hidden-import=pyttsx3.drivers \
