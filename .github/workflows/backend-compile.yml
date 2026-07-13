@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.tag_name || github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -67,10 +69,14 @@ jobs:
                       --hidden-import=pyttsx3.drivers.nsss \
                       backend/server.py
 
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v5
+      - name: Generate Artifact Attestation
+        uses: actions/attest-build-provenance@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: dist/${{ matrix.executable_name }}
-          if-no-files-found: error
-          retention-days: 7
+          subject-path: dist/${{ matrix.executable_name }}
+
+      - name: Upload binary to Release
+        if: github.event_name == 'release' || github.event.inputs.tag_name != ''
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          files: dist/${{ matrix.executable_name }}
