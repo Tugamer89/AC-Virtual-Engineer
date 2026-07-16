@@ -75,6 +75,8 @@ jobs:
                       --hidden-import=pyttsx3.drivers.sapi5 \
                       --hidden-import=pyttsx3.drivers.espeak \
                       --hidden-import=pyttsx3.drivers.nsss \
+                      --icon=frontend/public/favicon.svg \
+                      --version-file=version_info.txt \
                       backend/server.py
 
       - name: Generate Artifact Attestation

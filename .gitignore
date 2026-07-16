@@ -11,6 +11,7 @@ pycache/
 *$py.class
 *.so
 .Python
+*.spec
 
 # --- Frontend React ---
 
