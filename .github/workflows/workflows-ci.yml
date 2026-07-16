@@ -1,0 +1,41 @@
+name: Workflows CI
+
+on:
+  push:
+    paths:
+      - '.github/workflows/**.yml'
+      - '.github/workflows/**.yaml'
+  pull_request:
+    paths:
+      - '.github/workflows/**.yml'
+      - '.github/workflows/**.yaml'
+
+jobs:
+  lint-and-format:
+    name: Validate and Lint Actions
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check YAML Formatting
+        uses: creyD/prettier_action@8c18391fdc98ed0d884c6345f03975edac71b8f0
+        with:
+          prettier_options: --check ".github/workflows/**/*.yml"
+          dry: true
+
+      - name: Validate Actions Syntax
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7
+
+      - name: Set up Python for yamllint
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install yamllint
+        run: |
+          pip install --only-binary :all: yamllint
+
+      - name: Run yamllint
+        run: yamllint .github/workflows/
