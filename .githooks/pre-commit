@@ -21,7 +21,7 @@ cd ..
 echo "Checking Frontend..."
 cd frontend
 # 1. Formatting
-npx prettier --write .
+npx --ignore-scripts prettier --write .
 # 2. Linting
 npm run lint
 cd ..
