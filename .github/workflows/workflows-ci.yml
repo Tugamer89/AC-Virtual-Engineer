@@ -22,7 +22,7 @@ jobs:
       - name: Check YAML Formatting
         uses: creyD/prettier_action@8c18391fdc98ed0d884c6345f03975edac71b8f0
         with:
-          prettier_options: --check ".github/workflows/**/*.yml"
+          prettier_options: --check ".github/workflows/*.yml"
           dry: true
 
       - name: Validate Actions Syntax
