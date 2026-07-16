@@ -49,6 +49,6 @@ body:
     attributes:
       label: Environment Versions
       description: Please provide the versions of Python, Node, and Assetto Corsa / Mods.
-      placeholder: e.g. Python 3.11, Node 18.16, Assetto Corsa + CSP 0.1.79
+      placeholder: e.g. Python 3.13, Node 18.16, Assetto Corsa + CSP 0.1.79
     validations:
       required: true
