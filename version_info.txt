@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(1, 0, 0, 0),
-    prodvers=(1, 0, 0, 0),
+    filevers=(0, 1, 1, 0),
+    prodvers=(0, 1, 1, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -14,14 +14,14 @@ VSVersionInfo(
       [
       StringTable(
         '040904B0',
-        [StringStruct('CompanyName', 'Simone Saya'),
+        [StringStruct('CompanyName', 'Tugamer89'),
         StringStruct('FileDescription', 'AC Virtual Engineer Server'),
-        StringStruct('FileVersion', '1.0.0'),
+        StringStruct('FileVersion', '0.1.1'),
         StringStruct('InternalName', 'ac_virtual_engineer'),
         StringStruct('LegalCopyright', 'Copyright (c) 2026'),
         StringStruct('OriginalFilename', 'ac_virtual_engineer.exe'),
         StringStruct('ProductName', 'AC Virtual Engineer'),
-        StringStruct('ProductVersion', '1.0.0')])
+        StringStruct('ProductVersion', '0.1.1')])
       ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
   ]
