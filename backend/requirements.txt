@@ -4,6 +4,10 @@
 #
 #    pip-compile --generate-hashes backend/requirements.in
 #
+comtypes==1.4.16 \
+    --hash=sha256:cd66d1add01265cface4df51ba1e31cd1657e04463c281c802e737e79e1ba93c \
+    --hash=sha256:e18d85179ff12955524c5a8c3bc09cb3c0d890f1da4d7123d14244c7b78f84c8
+    # via -r backend/requirements.in
 pyttsx3==2.99 \
     --hash=sha256:a18a5601530a570c43491b4112887fc34c47e118fc937287db8d21905da1f74e \
     --hash=sha256:ff3e4ff756c24d72b9f3f2f304e0edaafd0f58adb0e6f4b90d930440cda8b207
