@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.2...v0.1.3) (2026-07-17)
+
+
+### Bug Fixes
+
+* update package versions in requirements files to specific versions ([b96ef87](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/b96ef8744c8beafd14632927e666709b533bd619))
+
 ## [0.1.2](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.1...v0.1.2) (2026-07-17)
 
 
