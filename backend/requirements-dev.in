@@ -1,5 +1,5 @@
 -c requirements.txt
-black>=26.5.1
-flake8>=7.3
-mypy>=2.3.0
-pyinstaller
+black==26.5.1
+flake8==7.3
+mypy==2.3.0
+pyinstaller==6.21.0
