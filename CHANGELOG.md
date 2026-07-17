@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.4...v0.1.5) (2026-07-17)
+
+
+### Bug Fixes
+
+* update cache dependency path and requirements file for Python dependencies ([508ef22](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/508ef226479a9be5e690572c93f0b99b45c6d655))
+
 ## [0.1.4](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.3...v0.1.4) (2026-07-17)
 
 
