@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.8...v0.1.9) (2026-07-17)
+
+
+### Bug Fixes
+
+* moved from pip-tools to uv compile ([f8dd391](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/f8dd39108e1486eda371b08eada2a1ec5625c034))
+
 ## [0.1.8](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.7...v0.1.8) (2026-07-17)
 
 
