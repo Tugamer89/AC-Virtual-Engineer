@@ -5,3 +5,4 @@ mypy>=2.3.0
 pyinstaller>=6.21.0
 macholib
 colorama
+pefile
