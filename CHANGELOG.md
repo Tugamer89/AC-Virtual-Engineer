@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.6...v0.1.7) (2026-07-17)
+
+
+### Bug Fixes
+
+* add colorama to development requirements and update requirements files ([14ef764](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/14ef764eee9d07e63ddde7402c8d7c5eb417e54e))
+
 ## [0.1.6](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.5...v0.1.6) (2026-07-17)
 
 
