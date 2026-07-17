@@ -27,7 +27,7 @@ jobs:
       - name: Validate Actions Syntax
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7
         with:
-          flags: -ignore 'missing input "app-id"' -ignore 'input "client-id" is not defined'
+          flags: -ignore missing.*app-id -ignore client-id.*defined
 
       - name: Set up Python for yamllint
         uses: actions/setup-python@v6
