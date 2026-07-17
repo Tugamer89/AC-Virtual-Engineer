@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.5...v0.1.6) (2026-07-17)
+
+
+### Bug Fixes
+
+* add macholib to development requirements and update dependencies in requirements files ([ad37622](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/ad37622aa0b7da12147792ba4d11e8a099241d8d))
+
 ## [0.1.5](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.4...v0.1.5) (2026-07-17)
 
 
