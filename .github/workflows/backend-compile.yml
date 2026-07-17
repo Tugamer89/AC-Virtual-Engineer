@@ -61,7 +61,7 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          pip install --only-binary :all: --require-hashes -r backend/requirements-dev.txt
+          pip install --only-binary :all: --require-hashes -r backend/requirements.txt -r backend/requirements-dev.txt
 
       - name: Generate version_info.txt dynamically
         run: python backend/scripts/generate_version.py

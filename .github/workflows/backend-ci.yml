@@ -31,7 +31,7 @@ jobs:
 
       - name: Install Python Dependencies
         run: |
-          pip install --only-binary :all: --require-hashes -r requirements-dev.txt
+          pip install --only-binary :all: --require-hashes -r requirements.txt -r requirements-dev.txt
 
       - name: Linting
         run: |
