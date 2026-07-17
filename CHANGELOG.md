@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.2](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.1...v0.1.2) (2026-07-17)
+
+
+### Bug Fixes
+
+* add flags to actionlint for ignoring specific input errors ([dee8313](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/dee8313f9f7a6e15c34bb87044c46a31b7783871))
+* add initial .yamllint configuration for YAML linting rules ([97fce24](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/97fce248b8ad869cdb24bb6cf79c4a54e81a9ba1))
+* add workflow_dispatch event to CI workflow ([96912ec](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/96912ec0bfa9819e8fd54b04fc1e14d23c9cf857))
+* enhance pre-commit hook for selective checks and add CI workflow for YAML validation ([7245b2e](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/7245b2e961d8d98aacbee1ceb2fc928f2c614010))
+* update actionlint flags to use regex for ignoring specific input errors ([f744ccb](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/f744ccb533e2b5c0954e4f03b30ec4181d4eb2b3))
+* update actions versions in CI workflow and adjust YAML formatting check ([4b73e5a](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/4b73e5a982e3d124f5e1d96145cb4a12cd7a59b9))
+* update backend dependencies and sonar project configuration ([876bd05](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/876bd057bb58e2719869694c914b7c2fbcd45861))
+* update cache dependency paths in CI workflows ([c38137f](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/c38137fd8664df716435cf9184cd2bd0d455dc9d))
+* update pre-commit hook to ignore scripts in prettier and add .githooks to sonar.sources ([c0eec7d](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/c0eec7dc95e875ff21fde5bbc27dc8ec74b03090))
+* update YAML formatting check to target specific files in CI workflow ([75d6e95](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/75d6e9591aa24ff773dba7d1d5a51379744d2e3b))
+* update YAML formatting check to use npx prettier directly ([d16fff1](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/d16fff183b37f44714e39622bd88f6a1389bd2b6))
+
 ## [0.1.1](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.0...v0.1.1) (2026-07-11)
 
 
