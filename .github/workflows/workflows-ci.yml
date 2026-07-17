@@ -20,10 +20,9 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Check YAML Formatting
-        uses: creyD/prettier_action@8c18391fdc98ed0d884c6345f03975edac71b8f0
-        with:
-          prettier_options: --check .github/workflows/
-          dry: true
+        run: |
+          npx --ignore-scripts prettier --write .github/workflows/
+          git diff --exit-code
 
       - name: Validate Actions Syntax
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7
