@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.9...v0.1.10) (2026-07-17)
+
+
+### Bug Fixes
+
+* add favicon.ico to the frontend public directory ([67a45c2](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/67a45c2bc061106cb8def46a0a33950b8a20a194))
+
 ## [0.1.9](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.8...v0.1.9) (2026-07-17)
 
 
