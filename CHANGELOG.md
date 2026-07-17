@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.7...v0.1.8) (2026-07-17)
+
+
+### Bug Fixes
+
+* update development requirements to include pefile and ensure proper hashes ([b36c11d](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/b36c11d770643ff10435a04612249c3aeb66a9fe))
+
 ## [0.1.7](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.6...v0.1.7) (2026-07-17)
 
 
