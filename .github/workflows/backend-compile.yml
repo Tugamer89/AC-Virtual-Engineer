@@ -75,7 +75,7 @@ jobs:
                       --hidden-import=pyttsx3.drivers.sapi5 \
                       --hidden-import=pyttsx3.drivers.espeak \
                       --hidden-import=pyttsx3.drivers.nsss \
-                      --icon=frontend/public/favicon.svg \
+                      --icon=frontend/public/favicon.ico \
                       --version-file=version_info.txt \
                       backend/server.py
 
