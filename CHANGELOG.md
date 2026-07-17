@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.12...v0.1.13) (2026-07-17)
+
+
+### Bug Fixes
+
+* update Python dependency installation to include requirements.txt ([0b9231c](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/0b9231c108c2a0382087236763ec2b82917ec2bb))
+
 ## [0.1.12](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.11...v0.1.12) (2026-07-17)
 
 
