@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.10...v0.1.11) (2026-07-17)
+
+
+### Bug Fixes
+
+* update icon path from favicon.svg to favicon.ico in backend compile workflow ([05cc00a](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/05cc00a62aae6ec3478e62d2e2b58f40db8771b7))
+
 ## [0.1.10](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.9...v0.1.10) (2026-07-17)
 
 
