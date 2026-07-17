@@ -2,13 +2,13 @@ name: Backend CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
-      - 'backend/**'
+      - "backend/**"
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
-      - 'backend/**'
+      - "backend/**"
   workflow_dispatch:
 
 jobs:
@@ -25,9 +25,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
-          cache: 'pip'
-          cache-dependency-path: 'backend/requirements-dev.txt'
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: "backend/requirements-dev.txt"
 
       - name: Install Python Dependencies
         run: |

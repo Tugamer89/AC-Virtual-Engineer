@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag of the old release (e.g., v0.1.1). Leave blank to build without uploading.'
+        description: "Tag of the old release (e.g., v0.1.1). Leave blank to build without uploading."
         required: false
         type: string
 
@@ -30,18 +30,17 @@ jobs:
             ext: ""
           - os: macos-latest
             os_name: macos
-            arch: amd64 
+            arch: amd64
             ext: ""
           - os: windows-latest
             os_name: windows
             arch: amd64
             ext: ".exe"
-    
+
     env:
-        executable_name: acve-backend-${{ matrix.os_name }}-${{ matrix.arch }}${{ matrix.ext }}
+      executable_name: acve-backend-${{ matrix.os_name }}-${{ matrix.arch }}${{ matrix.ext }}
 
     steps:
-
       - name: Checkout Source Code
         uses: actions/checkout@v7
         with:
@@ -50,9 +49,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
-          cache: 'pip'
-          cache-dependency-path: 'backend/requirements.txt'
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: "backend/requirements.txt"
 
       - name: Install System Dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
