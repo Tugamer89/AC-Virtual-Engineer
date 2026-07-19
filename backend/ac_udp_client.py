@@ -3,6 +3,7 @@ import logging
 import socket
 import struct
 import time
+from typing import List, Optional, Tuple, TypedDict
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -10,36 +11,55 @@ logging.basicConfig(
 logger = logging.getLogger("AC_UDP")
 
 
+class TelemetryData(TypedDict):
+    speed_kmh: float
+    gas: float
+    brake: float
+    engine_rpm: float
+    max_rpm: float
+    steer_angle: float
+    gear: int
+    slip_angle: List[float]
+    car_name: str
+    track_name: str
+    lap_time: int
+    last_lap: int
+    best_lap: int
+    suspension_height: List[float]
+
+
 class ACUDPClient:
-    SERVER_IP = "127.0.0.1"
-    SERVER_PORT = 9996
+    """UDP Client for communicating with Assetto Corsa telemetry server."""
 
-    OP_HANDSHAKE = 0
-    OP_SUBSCRIBE_UPDATE = 1
-    OP_DISMISS = 3
+    SERVER_IP: str = "127.0.0.1"
+    SERVER_PORT: int = 9996
 
-    FMT_CAR_INFO = "<c 3x i 3f 6? 2x 3f 4i 5f i f 56f f f 3f"
-    EXPECTED_SIZE = struct.calcsize(FMT_CAR_INFO)
+    OP_HANDSHAKE: int = 0
+    OP_SUBSCRIBE_UPDATE: int = 1
+    OP_DISMISS: int = 3
 
-    def __init__(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Format string for AC telemetry unpacking
+    FMT_CAR_INFO: str = "<c 3x i 3f 6? 2x 3f 4i 5f i f 56f f f 3f"
+    EXPECTED_SIZE: int = struct.calcsize(FMT_CAR_INFO)
+
+    def __init__(self) -> None:
+        self.sock: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setblocking(False)
-        self.is_connected = False
-        self.driver_name = ""
-        self.car_name = ""
-        self.track_name = ""
-        self.max_rpm = 8000.0
+        self.is_connected: bool = False
+
+        self.driver_name: str = ""
+        self.car_name: str = ""
+        self.track_name: str = ""
+        self.max_rpm: float = 8000.0
 
     def _pack_handshake(self, operation_id: int) -> bytes:
+        """Packs the handshake request bytes."""
         return struct.pack("<iii", 1, 1, operation_id)
 
     async def connect(self) -> bool:
-        logger.info("UDP handshake attempt...")
+        """Asynchronously establishes the UDP handshake with Assetto Corsa."""
+        logger.info("Initiating UDP handshake attempt...")
         loop = asyncio.get_running_loop()
-
-        if getattr(self, "sock", None) is None:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            self.sock.setblocking(False)
 
         try:
             self.sock.sendto(
@@ -58,59 +78,37 @@ class ACUDPClient:
                         loop.sock_recv(self.sock, 4096), timeout=timeout_left
                     )
 
+                    # Assetto Corsa handshake response size variations
                     if len(data) == 208:
-                        unpacked = struct.unpack("<50s50sii50s50s", data)
-                        self.car_name = (
-                            unpacked[0]
-                            .decode("utf-8", "ignore")
-                            .strip("\x00")
-                            .split("%")[0]
-                        )
-                        self.driver_name = (
-                            unpacked[1]
-                            .decode("utf-8", "ignore")
-                            .strip("\x00")
-                            .split("%")[0]
-                        )
-                        self.track_name = (
-                            unpacked[4]
-                            .decode("utf-8", "ignore")
-                            .strip("\x00")
-                            .split("%")[0]
-                        )
+                        unpacked_208 = struct.unpack("<50s50sii50s50s", data)
+                        self.car_name = self._decode_string(unpacked_208[0], "utf-8")
+                        self.driver_name = self._decode_string(unpacked_208[1], "utf-8")
+                        self.track_name = self._decode_string(unpacked_208[4], "utf-8")
                         break
                     elif len(data) == 408:
-                        unpacked = struct.unpack("<100s100sii100s100s", data)
-                        self.car_name = (
-                            unpacked[0]
-                            .decode("utf-16-le", "ignore")
-                            .strip("\x00")
-                            .split("%")[0]
+                        unpacked_408 = struct.unpack("<100s100sii100s100s", data)
+                        self.car_name = self._decode_string(
+                            unpacked_408[0], "utf-16-le"
                         )
-                        self.driver_name = (
-                            unpacked[1]
-                            .decode("utf-16-le", "ignore")
-                            .strip("\x00")
-                            .split("%")[0]
+                        self.driver_name = self._decode_string(
+                            unpacked_408[1], "utf-16-le"
                         )
-                        self.track_name = (
-                            unpacked[4]
-                            .decode("utf-16-le", "ignore")
-                            .strip("\x00")
-                            .split("%")[0]
+                        self.track_name = self._decode_string(
+                            unpacked_408[4], "utf-16-le"
                         )
                         break
+
                 except asyncio.TimeoutError:
                     continue
                 except ConnectionResetError:
                     return False
 
             else:
-                logger.error("Handshake failed: no valid data received in time.")
+                logger.error("Handshake failed: No valid data received within timeout.")
                 return False
 
             logger.info(
-                f"Connected: Driver: {self.driver_name} | "
+                f"Connected Successfully | Driver: {self.driver_name} | "
                 f"Car: {self.car_name} | Track: {self.track_name}"
             )
 
@@ -122,40 +120,38 @@ class ACUDPClient:
             return True
 
         except Exception as e:
-            logger.exception(f"UDP connection error: {e}")
+            logger.exception(f"UDP connection error encountered: {e}")
             return False
 
-    def disconnect(self):
-        if getattr(self, "sock", None) is not None:
-            if self.is_connected:
-                try:
-                    self.sock.sendto(
-                        self._pack_handshake(self.OP_DISMISS),
-                        (self.SERVER_IP, self.SERVER_PORT),
-                    )
-                except Exception as e:
-                    logger.debug(f"Could not send dismiss packet: {e}")
+    def _decode_string(self, raw_bytes: bytes, encoding: str) -> str:
+        """Helper method to decode and clean AC byte strings."""
+        return raw_bytes.decode(encoding, "ignore").strip("\x00").split("%")[0]
 
-            # Close and explicitly destroy the socket instance
+    def disconnect(self) -> None:
+        """Sends a dismissal signal and closes the socket."""
+        if self.is_connected:
+            self.sock.sendto(
+                self._pack_handshake(self.OP_DISMISS),
+                (self.SERVER_IP, self.SERVER_PORT),
+            )
             self.sock.close()
-            self.sock = None
+            self.is_connected = False
+            logger.info("Successfully disconnected from Assetto Corsa.")
 
-        self.is_connected = False
-        logger.info("Disconnected from AC.")
-
-    def get_latest_data(self) -> dict:
+    def get_latest_data(self) -> Optional[TelemetryData]:
+        """Retrieves and unpacks the latest telemetry payload."""
         if not self.is_connected:
-            return {}
+            return None
 
-        latest_data = None
+        latest_data: Optional[bytes] = None
         try:
             while True:
                 data, _ = self.sock.recvfrom(2048)
                 latest_data = data
         except BlockingIOError:
             pass
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Socket read error: {e}")
 
         if (
             latest_data
@@ -187,4 +183,4 @@ class ACUDPClient:
                 "best_lap": int(unpacked[16]),
                 "suspension_height": list(unpacked[77:81]),
             }
-        return {}
+        return None
