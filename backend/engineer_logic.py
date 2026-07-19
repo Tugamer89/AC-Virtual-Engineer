@@ -4,7 +4,9 @@ import subprocess
 import sys
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
+
+from ac_udp_client import TelemetryData
 
 logger = logging.getLogger("VirtualEngineer")
 
@@ -63,7 +65,7 @@ class VirtualEngineerLogic:
     def _update_cooldown(self, warning_type: str, current_time: float) -> None:
         self.cooldowns[warning_type] = current_time
 
-    def analyze(self, telemetry: Optional[Dict[str, Any]]) -> None:
+    def analyze(self, telemetry: TelemetryData) -> None:
         """Analyzes real-time telemetry and provides actionable driving feedback."""
         if not telemetry:
             return
