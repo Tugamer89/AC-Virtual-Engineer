@@ -30,9 +30,8 @@ load_dotenv(dotenv_path=env_path)
 
 logging.getLogger("aioice.ice").setLevel(logging.WARNING)
 
-active_connections = set()
-active_channels = set()
-
+active_connections: set[RTCPeerConnection] = set()
+active_channels: set[str] = set()
 
 async def broadcast_telemetry(ac_client, engineer):
     connesso = await ac_client.connect()
@@ -143,7 +142,7 @@ async def signaling_server():
 
 if __name__ == "__main__":
     if sys.platform.lower() == "win32" or os.name.lower() == "nt":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) # type: ignore[attr-defined]
 
     try:
         asyncio.run(signaling_server())
