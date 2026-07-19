@@ -1,6 +1,5 @@
 import asyncio
 import json
-import random
 import string
 import aiomqtt
 import secrets
@@ -49,12 +48,14 @@ async def broadcast_telemetry(ac_client, engineer):
             data_str = json.dumps(telemetry_data)
 
             for channel in active_channels:
-                if channel.readyState == "open":
-                    try:
-                        channel.send(data_str)
-                    except Exception as e:
-                        print(f"Errore invio a un client, lo rimuovo: {e}")
-                        active_channels.discard(channel)
+                if channel.readyState != "open":
+                    continue
+
+                try:
+                    channel.send(data_str)
+                except Exception as e:
+                    print(f"Errore invio a un client, lo rimuovo: {e}")
+                    active_channels.discard(channel)
 
         await asyncio.sleep(0.016)
 
