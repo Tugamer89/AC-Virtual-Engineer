@@ -6,6 +6,8 @@ import {
   AlertTriangle,
   Clock,
   ArrowDownToLine,
+  Share2,
+  Check,
 } from "lucide-react";
 import mqtt from "mqtt";
 
@@ -38,6 +40,7 @@ export default function App() {
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
   const [pin, setPin] = useState<string>(() => {
     if (typeof window !== "undefined") {
@@ -234,15 +237,26 @@ export default function App() {
       .padStart(3, "0")}`;
   };
 
+  // --- Interaction Handlers ---
+
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Restrict input to digits only
     setPin(e.target.value.replace(/\D/g, ""));
   };
 
-  const handleShareClick = () => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?pin=${pin}`;
-    navigator.clipboard.writeText(shareUrl);
-    alert("Share link copied!");
+  const handleShareClick = async () => {
+    try {
+      const shareUrl = `${window.location.origin}${window.location.pathname}?pin=${pin}`;
+      await navigator.clipboard.writeText(shareUrl);
+
+      // Trigger visual feedback state
+      setIsCopied(true);
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy URL to clipboard:", err);
+    }
   };
 
   // --- Render ---
@@ -454,9 +468,18 @@ export default function App() {
           {isConnected && (
             <button
               onClick={handleShareClick}
-              className="text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded border border-slate-700 transition-colors"
+              className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg border transition-all duration-300 shadow-sm ${
+                isCopied
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50"
+                  : "bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700 hover:border-slate-600"
+              }`}
             >
-              Share Session URL
+              {isCopied ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Share2 className="w-4 h-4" />
+              )}
+              {isCopied ? "Copied!" : "Share Session URL"}
             </button>
           )}
 
