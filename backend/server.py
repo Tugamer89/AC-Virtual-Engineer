@@ -33,7 +33,7 @@ logging.getLogger("aioice.ice").setLevel(logging.WARNING)
 
 active_connections: set[RTCPeerConnection] = set()
 active_channels: set[str] = set()
-background_tasks = set() # type: ignore[attr-defined]
+background_tasks = set() # type: ignore[var-annotated]
 
 async def broadcast_telemetry(ac_client, engineer):
     connesso = await ac_client.connect()
