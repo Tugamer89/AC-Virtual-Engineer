@@ -44,21 +44,23 @@ async def broadcast_telemetry(ac_client, engineer):
         telemetry_data = ac_client.get_latest_data()
 
         if telemetry_data:
-            engineer.analyze(telemetry_data)
-            data_str = json.dumps(telemetry_data)
-
-            for channel in active_channels:
-                if channel.readyState != "open":
-                    continue
-
-                try:
-                    channel.send(data_str)
-                except Exception as e:
-                    print(f"Errore invio a un client, lo rimuovo: {e}")
-                    active_channels.discard(channel)
+            _process_and_broadcast(engineer, telemetry_data)
 
         await asyncio.sleep(0.016)
 
+def _process_and_broadcast(engineer, telemetry_data):
+    engineer.analyze(telemetry_data)
+    data_str = json.dumps(telemetry_data)
+
+    for channel in active_channels:
+        if channel.readyState != "open":
+            continue
+            
+        try:
+            channel.send(data_str)
+        except Exception as e:
+            print(f"Errore invio a un client, lo rimuovo: {e}")
+            active_channels.discard(channel)
 
 async def signaling_server():
     pin = "".join(secrets.choice(string.digits) for _ in range(6))
