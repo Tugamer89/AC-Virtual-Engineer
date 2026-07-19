@@ -3,6 +3,7 @@ import json
 import random
 import string
 import aiomqtt
+import secrets
 import ssl
 import sys
 import os
@@ -32,6 +33,7 @@ logging.getLogger("aioice.ice").setLevel(logging.WARNING)
 
 active_connections: set[RTCPeerConnection] = set()
 active_channels: set[str] = set()
+background_tasks = set()
 
 async def broadcast_telemetry(ac_client, engineer):
     connesso = await ac_client.connect()
@@ -58,7 +60,7 @@ async def broadcast_telemetry(ac_client, engineer):
 
 
 async def signaling_server():
-    pin = "".join(random.choices(string.digits, k=6))
+    pin = "".join(secrets.choice(string.digits) for _ in range(6))
     topic_host = f"acve/signaling/{pin}/host"
     topic_client = f"acve/signaling/{pin}/client"
 
@@ -71,7 +73,9 @@ async def signaling_server():
     print(f"INSERISCI QUESTO PIN: {pin}")
     print("=" * 60)
 
-    asyncio.create_task(broadcast_telemetry(ac_client, engineer))
+    task = asyncio.create_task(broadcast_telemetry(ac_client, engineer))
+    background_tasks.add(task)
+    task.add_done_callback(background_tasks.discard)
 
     tls_context = ssl.create_default_context()
     mqtt_host = os.environ.get("MQTT_HOST")
@@ -110,10 +114,10 @@ async def signaling_server():
                     active_channels.add(channel)
 
                 @pc.on("connectionstatechange")
-                async def on_connectionstatechange():
-                    if pc.connectionState in ["failed", "closed"]:
+                async def on_connectionstatechange(current_pc=pc):
+                    if current_pc.connectionState in ["failed", "closed"]:
                         print("Un client si è disconnesso.")
-                        active_connections.discard(pc)
+                        active_connections.discard(current_pc)
 
                 await pc.setRemoteDescription(
                     RTCSessionDescription(sdp=data["sdp"], type=data["type"])
