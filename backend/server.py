@@ -9,7 +9,7 @@ import sys
 from typing import Any, Set
 
 import aiomqtt
-from ac_udp_client import ACUDPClient
+from ac_udp_client import ACUDPClient, TelemetryData
 from aiortc import (
     RTCConfiguration,
     RTCIceServer,
@@ -63,7 +63,7 @@ async def broadcast_telemetry(
 
 
 def _process_and_broadcast(
-    engineer: VirtualEngineerLogic, telemetry_data: dict
+    engineer: VirtualEngineerLogic, telemetry_data: TelemetryData
 ) -> None:
     """Passes data to the AI Engineer and pushes to all connected clients."""
     engineer.analyze(telemetry_data)
@@ -108,9 +108,9 @@ async def signaling_server() -> None:
     task.add_done_callback(background_tasks.discard)
 
     tls_context = ssl.create_default_context()
-    mqtt_host = os.environ.get("MQTT_HOST")
-    mqtt_user = os.environ.get("MQTT_USERNAME")
-    mqtt_pass = os.environ.get("MQTT_PASSWORD")
+    mqtt_host: str = os.environ.get("MQTT_HOST")
+    mqtt_user: str = os.environ.get("MQTT_USERNAME")
+    mqtt_pass: str = os.environ.get("MQTT_PASSWORD")
 
     async with aiomqtt.Client(
         hostname=mqtt_host,
@@ -198,7 +198,7 @@ async def _handle_candidate(data: dict) -> None:
 if __name__ == "__main__":
     if sys.platform.lower() == "win32" or os.name.lower() == "nt":
         # Required for aioice/aiortc on Windows environments
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) # type: ignore[attr-defined]
 
     try:
         asyncio.run(signaling_server())
