@@ -33,7 +33,7 @@ class ACUDPClient:
         return struct.pack("<iii", 1, 1, operation_id)
 
     async def connect(self) -> bool:
-        logger.info("Tentativo di handshake UDP...")
+        logger.info("UDP handshake attempt...")
         loop = asyncio.get_running_loop()
 
         try:
@@ -99,12 +99,12 @@ class ACUDPClient:
                     continue
 
             else:
-                logger.error("Handshake fallito: nessun dato valido ricevuto in tempo.")
+                logger.error("Handshake failed: no valid data received in time.")
                 return False
 
             logger.info(
-                f"Connesso: Pilota: {self.driver_name} | "
-                f"Auto: {self.car_name} | Pista: {self.track_name}"
+                f"Connected: Driver: {self.driver_name} | "
+                f"Car: {self.car_name} | Track: {self.track_name}"
             )
 
             self.sock.sendto(
@@ -115,7 +115,7 @@ class ACUDPClient:
             return True
 
         except Exception as e:
-            logger.exception(f"Errore di connessione UDP: {e}")
+            logger.exception(f"UDP connection error: {e}")
             return False
 
     def disconnect(self):
@@ -126,7 +126,7 @@ class ACUDPClient:
             )
             self.sock.close()
             self.is_connected = False
-            logger.info("Disconnesso da AC.")
+            logger.info("Disconnected from AC.")
 
     def get_latest_data(self) -> dict:
         if not self.is_connected:

@@ -37,7 +37,7 @@ background_tasks = set() # type: ignore[var-annotated]
 async def broadcast_telemetry(ac_client, engineer):
     connesso = await ac_client.connect()
     if not connesso:
-        print("Impossibile connettersi ad Assetto Corsa. Auto in pista?")
+        print("Unable to connect to Assetto Corsa. Is the car on track?")
         return
 
     while True:
@@ -59,7 +59,7 @@ def _process_and_broadcast(engineer, telemetry_data):
         try:
             channel.send(data_str)
         except Exception as e:
-            print(f"Errore invio a un client, lo rimuovo: {e}")
+            print(f"Error sending to a client, removing it: {e}")
             active_channels.discard(channel)
 
 async def signaling_server():
@@ -71,9 +71,9 @@ async def signaling_server():
     engineer = VirtualEngineerLogic()
 
     print("=" * 60)
-    print("SERVER TELEMETRIA AVVIATO CON SUCCESSO!")
-    print("Vai su: https://tugamer89.github.io/AC-Virtual-Engineer")
-    print(f"INSERISCI QUESTO PIN: {pin}")
+    print("TELEMETRY SERVER STARTED SUCCESSFULLY!")
+    print("Go to: https://tugamer89.github.io/AC-Virtual-Engineer")
+    print(f"ENTER THIS PIN: {pin}")
     print("=" * 60)
 
     task = asyncio.create_task(broadcast_telemetry(ac_client, engineer))
@@ -99,7 +99,7 @@ async def signaling_server():
 
             if data.get("type") == "offer":
                 print(
-                    "Richiesta di connessione ricevuta! Negoziazione WebRTC in corso..."
+                    "Connection request received! WebRTC negotiation in progress..."
                 )
                 pc = RTCPeerConnection(
                     configuration=RTCConfiguration(
@@ -111,15 +111,15 @@ async def signaling_server():
                 @pc.on("datachannel")
                 def on_datachannel(channel):
                     print(
-                        "Connessione P2P stabilita! "
-                        f"Telemetria in streaming sul canale: {channel.label}"
+                        "P2P connection established! "
+                        f"Telemetry streaming on channel: {channel.label}"
                     )
                     active_channels.add(channel)
 
                 @pc.on("connectionstatechange")
                 async def on_connectionstatechange(current_pc=pc):
                     if current_pc.connectionState in ["failed", "closed"]:
-                        print("Un client si è disconnesso.")
+                        print("A client has disconnected.")
                         active_connections.discard(current_pc)
 
                 await pc.setRemoteDescription(
@@ -154,4 +154,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(signaling_server())
     except KeyboardInterrupt:
-        print("\nChiusura del server.")
+        print("\nShutting down the server.")

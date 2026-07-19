@@ -9,17 +9,14 @@ logger = logging.getLogger("VirtualEngineer")
 
 
 class VirtualEngineerLogic:
-    """Il cervello. Analizza la telemetria e gestisce la sintesi vocale."""
-
     def __init__(self):
         self.last_warning_time = 0
         self.COOLDOWN_SECONDS = 15
         self.worker_script = os.path.join(os.path.dirname(__file__), "tts_worker.py")
-        logger.info("Cervello Ingegnere Inizializzato.")
+        logger.info("Engineer Brain Initialized.")
 
     def speak(self, text: str):
-        """Usa un micro-processo separato per garantire che pyttsx3 non vada in crash col server asincrono."""
-        logger.info(f"[VOCE]: {text}")
+        logger.info(f"[VOICE]: {text}")
 
         def _run_tts():
             kwargs = {}
@@ -31,7 +28,6 @@ class VirtualEngineerLogic:
         threading.Thread(target=_run_tts, daemon=True).start()
 
     def analyze(self, telemetry: dict):
-        """Riceve il dizionario telemetrico pulito e decide se intervenire."""
         if not telemetry:
             return
 
@@ -39,23 +35,22 @@ class VirtualEngineerLogic:
         if current_time - self.last_warning_time < self.COOLDOWN_SECONDS:
             return
 
-        # Estraiamo i dati che ci servono dalla telemetria
         slip = telemetry.get("slip_angle", [0, 0, 0, 0])
         speed = telemetry.get("speed_kmh", 0)
         gear = telemetry.get("gear", 0)
 
-        # Calcolo medie (0,1 = Anteriori | 2,3 = Posteriori)
+        # Calculate averages (0,1 = Front | 2,3 = Rear)
         avg_front_slip = (abs(slip[0]) + abs(slip[1])) / 2
         avg_rear_slip = (abs(slip[2]) + abs(slip[3])) / 2
 
         if avg_front_slip > 0.12 and avg_rear_slip < 0.05 and speed > 50:
             self.speak(
-                "Rilevato sottosterzo in curva. Valuta di ammorbidire la barra antirollio anteriore."
+                "Understeer detected in corner. Consider softening the front anti-roll bar."
             )
             self.last_warning_time = current_time
 
         elif avg_rear_slip > 0.15 and avg_front_slip < 0.06 and speed > 50 and gear > 1:
             self.speak(
-                "Perdita del posteriore rilevata. Attento in uscita. Potrebbe servire abbassare il precarico differenziale."
+                "Loss of rear grip detected. Be careful on exit. You might need to lower the differential preload."
             )
             self.last_warning_time = current_time
