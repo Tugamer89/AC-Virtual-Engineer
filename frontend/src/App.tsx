@@ -1,5 +1,12 @@
 import { useEffect, useState, useRef } from "react";
-import { Activity, Gauge, Car, AlertTriangle } from "lucide-react";
+import {
+  Activity,
+  Gauge,
+  Car,
+  AlertTriangle,
+  Clock,
+  ArrowDownToLine,
+} from "lucide-react";
 import mqtt from "mqtt";
 
 interface TelemetryData {
@@ -7,11 +14,16 @@ interface TelemetryData {
   gas: number;
   brake: number;
   engine_rpm: number;
+  max_rpm: number;
   steer_angle: number;
   gear: number;
   slip_angle: number[];
   car_name: string;
   track_name: string;
+  lap_time: number;
+  last_lap: number;
+  best_lap: number;
+  suspension_height: number[];
 }
 
 export default function App() {
@@ -138,6 +150,14 @@ export default function App() {
     return `${Math.round(value * 100)}%`;
   };
 
+  const formatTime = (ms: number) => {
+    if (!ms || ms === 0) return "--:--.---";
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    const milliseconds = ms % 1000;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`;
+  };
+
   let mainContent;
 
   if (!isConnected) {
@@ -178,10 +198,15 @@ export default function App() {
       </div>
     );
   } else {
+    const rpmPercentage = Math.min(
+      (telemetry.engine_rpm / telemetry.max_rpm) * 100,
+      100,
+    );
+
     mainContent = (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Info */}
-        <div className="col-span-full lg:col-span-3 bg-slate-900 border border-slate-800 rounded-xl p-4 flex justify-between items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Session Info - Full Width */}
+        <div className="col-span-full bg-slate-900 border border-slate-800 rounded-xl p-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Car className="text-slate-400" />
             <div>
@@ -201,62 +226,122 @@ export default function App() {
           </div>
         </div>
 
-        {/* Speed */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center">
-          <Gauge className="text-blue-500 w-10 h-10 mb-4 opacity-50" />
-          <div className="text-6xl font-black tabular-nums tracking-tighter">
-            {Math.round(telemetry.speed_kmh)}
+        {/* Powertrain: Speed, Gear, RPM */}
+        <div className="xl:col-span-2 grid grid-cols-2 gap-6 bg-slate-900 border border-slate-800 rounded-xl p-6">
+          <div className="flex flex-col items-center justify-center border-r border-slate-800">
+            <Gauge className="text-blue-500 w-8 h-8 mb-4 opacity-50" />
+            <div className="text-5xl font-black tabular-nums tracking-tighter">
+              {Math.round(telemetry.speed_kmh)}
+            </div>
+            <div className="text-slate-500 uppercase tracking-widest text-xs mt-2">
+              km/h
+            </div>
           </div>
-          <div className="text-slate-500 uppercase tracking-widest text-sm mt-2">
-            km/h
-          </div>
-        </div>
-
-        {/* Gear and RPM */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center">
-          <div className="text-7xl font-black text-amber-400">
-            {formatGear(telemetry.gear)}
-          </div>
-          <div className="text-slate-500 uppercase tracking-widest text-sm mt-2 font-mono">
-            RPM: {Math.round(telemetry.engine_rpm)}
-          </div>
-          {/* RPM bar (Simplified, 8000 max rpm) */}
-          <div className="w-full bg-slate-800 h-2 mt-4 rounded-full overflow-hidden">
-            <div
-              className="bg-amber-400 h-full transition-all duration-75"
-              style={{
-                width: `${Math.min((telemetry.engine_rpm / 8000) * 100, 100)}%`,
-              }}
-            ></div>
+          <div className="flex flex-col items-center justify-center">
+            <div className="text-6xl font-black text-amber-400">
+              {formatGear(telemetry.gear)}
+            </div>
+            <div className="text-slate-500 uppercase tracking-widest text-xs mt-2 font-mono">
+              RPM: {Math.round(telemetry.engine_rpm)}
+            </div>
+            <div className="w-full bg-slate-800 h-2 mt-4 rounded-full overflow-hidden max-w-30">
+              <div
+                className={`h-full transition-all duration-75 ${rpmPercentage > 95 ? "bg-red-500" : "bg-amber-400"}`}
+                style={{ width: `${rpmPercentage}%` }}
+              ></div>
+            </div>
           </div>
         </div>
 
-        {/* Pedals */}
+        {/* Timing Deltas */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col justify-center">
+          <div className="flex items-center gap-2 mb-4 text-slate-400 border-b border-slate-800 pb-2">
+            <Clock className="w-4 h-4" />
+            <h2 className="text-sm uppercase tracking-widest font-semibold">
+              Timing
+            </h2>
+          </div>
+          <div className="space-y-3 font-mono text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Current</span>
+              <span className="text-white text-lg">
+                {formatTime(telemetry.lap_time)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Last</span>
+              <span className="text-slate-300">
+                {formatTime(telemetry.last_lap)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-purple-400">
+              <span>Best</span>
+              <span>{formatTime(telemetry.best_lap)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Pedals Input */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col justify-center space-y-6">
           <div>
-            <div className="flex justify-between text-sm mb-2 uppercase tracking-widest text-emerald-500">
+            <div className="flex justify-between text-xs mb-2 uppercase tracking-widest text-emerald-500">
               <span>Throttle</span>
               <span>{formatPedal(telemetry.gas)}</span>
             </div>
-            <div className="w-full bg-slate-800 h-4 rounded-sm overflow-hidden">
+            <div className="w-full bg-slate-800 h-3 rounded-sm overflow-hidden">
               <div
                 className="bg-emerald-500 h-full transition-all duration-75"
                 style={{ width: formatPedal(telemetry.gas) }}
               ></div>
             </div>
           </div>
-
           <div>
-            <div className="flex justify-between text-sm mb-2 uppercase tracking-widest text-red-500">
+            <div className="flex justify-between text-xs mb-2 uppercase tracking-widest text-red-500">
               <span>Brake</span>
               <span>{formatPedal(telemetry.brake)}</span>
             </div>
-            <div className="w-full bg-slate-800 h-4 rounded-sm overflow-hidden">
+            <div className="w-full bg-slate-800 h-3 rounded-sm overflow-hidden">
               <div
                 className="bg-red-500 h-full transition-all duration-75"
                 style={{ width: formatPedal(telemetry.brake) }}
               ></div>
             </div>
+          </div>
+        </div>
+
+        {/* Advanced Chassis Data (Grid format for 4 corners) */}
+        <div className="col-span-full xl:col-span-2 grid grid-cols-2 gap-4 bg-slate-900 border border-slate-800 rounded-xl p-6">
+          <div className="col-span-full flex items-center gap-2 mb-2 text-slate-400 border-b border-slate-800 pb-2">
+            <ArrowDownToLine className="w-4 h-4" />
+            <h2 className="text-sm uppercase tracking-widest font-semibold">
+              Suspension Travel (M)
+            </h2>
+          </div>
+          {/* FL & FR */}
+          <div className="flex justify-between p-3 bg-slate-950 rounded-lg border border-slate-800">
+            <span className="text-slate-500 text-xs">FL</span>
+            <span className="font-mono text-sm">
+              {telemetry.suspension_height[0].toFixed(3)}
+            </span>
+          </div>
+          <div className="flex justify-between p-3 bg-slate-950 rounded-lg border border-slate-800">
+            <span className="text-slate-500 text-xs">FR</span>
+            <span className="font-mono text-sm">
+              {telemetry.suspension_height[1].toFixed(3)}
+            </span>
+          </div>
+          {/* RL & RR */}
+          <div className="flex justify-between p-3 bg-slate-950 rounded-lg border border-slate-800">
+            <span className="text-slate-500 text-xs">RL</span>
+            <span className="font-mono text-sm">
+              {telemetry.suspension_height[2].toFixed(3)}
+            </span>
+          </div>
+          <div className="flex justify-between p-3 bg-slate-950 rounded-lg border border-slate-800">
+            <span className="text-slate-500 text-xs">RR</span>
+            <span className="font-mono text-sm">
+              {telemetry.suspension_height[3].toFixed(3)}
+            </span>
           </div>
         </div>
       </div>
@@ -265,7 +350,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6">
-      {/* Header */}
       <header className="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
         <div className="flex items-center gap-3">
           <Activity className="text-blue-500 w-8 h-8" />
@@ -284,7 +368,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content */}
       {mainContent}
     </div>
   );

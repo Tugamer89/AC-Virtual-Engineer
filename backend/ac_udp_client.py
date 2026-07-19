@@ -18,7 +18,7 @@ class ACUDPClient:
     OP_SUBSCRIBE_UPDATE = 1
     OP_DISMISS = 3
 
-    FMT_CAR_INFO = "<c 3x i 3f 6? 2x 3f 4i 5f i f 4f 4f 4f"
+    FMT_CAR_INFO = "<c 3x i 3f 6? 2x 3f 4i 5f i f 56f f f 3f"
     EXPECTED_SIZE = struct.calcsize(FMT_CAR_INFO)
 
     def __init__(self):
@@ -28,6 +28,7 @@ class ACUDPClient:
         self.driver_name = ""
         self.car_name = ""
         self.track_name = ""
+        self.max_rpm = 8000.0
 
     def _pack_handshake(self, operation_id: int) -> bytes:
         return struct.pack("<iii", 1, 1, operation_id)
@@ -151,16 +152,25 @@ class ACUDPClient:
             unpacked = struct.unpack(
                 self.FMT_CAR_INFO, latest_data[: self.EXPECTED_SIZE]
             )
+            
+            current_rpm = float(unpacked[21])
+            if current_rpm > self.max_rpm:
+                self.max_rpm = current_rpm
 
             return {
                 "speed_kmh": float(unpacked[2]),
                 "gas": float(unpacked[18]),
                 "brake": float(unpacked[19]),
-                "engine_rpm": float(unpacked[21]),
+                "engine_rpm": current_rpm,
+                "max_rpm": self.max_rpm,
                 "steer_angle": float(unpacked[22]),
                 "gear": int(unpacked[23]) - 1,
                 "slip_angle": list(unpacked[29:33]),
                 "car_name": self.car_name,
                 "track_name": self.track_name,
+                "lap_time": int(unpacked[14]),
+                "last_lap": int(unpacked[15]),
+                "best_lap": int(unpacked[16]),
+                "suspension_height": list(unpacked[77:81]),
             }
         return {}
