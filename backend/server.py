@@ -84,8 +84,7 @@ async def signaling_server():
 
     print("=" * 60)
     print("TELEMETRY SERVER STARTED SUCCESSFULLY!")
-    print("Go to: https://tugamer89.github.io/AC-Virtual-Engineer")
-    print(f"ENTER THIS PIN: {pin}")
+    print(f"OPEN: https://tugamer89.github.io/AC-Virtual-Engineer/?pin={pin}")
     print("=" * 60)
 
     task = asyncio.create_task(broadcast_telemetry(ac_client, engineer))
