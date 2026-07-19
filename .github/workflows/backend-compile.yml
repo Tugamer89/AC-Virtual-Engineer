@@ -28,14 +28,17 @@ jobs:
             os_name: linux
             arch: amd64
             ext: ""
+            path_sep: ":"
           - os: macos-latest
             os_name: macos
             arch: amd64
             ext: ""
+            path_sep: ":"
           - os: windows-latest
             os_name: windows
             arch: amd64
             ext: ".exe"
+            path_sep: ";"
 
     env:
       executable_name: acve-backend-${{ matrix.os_name }}-${{ matrix.arch }}${{ matrix.ext }}
@@ -66,11 +69,22 @@ jobs:
       - name: Generate version_info.txt dynamically
         run: python backend/scripts/generate_version.py
 
+      - name: Generate .env file
+        env:
+          MQTT_HOST: ${{ secrets.MQTT_HOST }}
+          MQTT_USERNAME: ${{ secrets.MQTT_USERNAME }}
+          MQTT_PASSWORD: ${{ secrets.MQTT_PASSWORD }}
+        run: |
+          echo "MQTT_HOST=$MQTT_HOST" > backend/.env
+          echo "MQTT_USERNAME=$MQTT_USERNAME" >> backend/.env
+          echo "MQTT_PASSWORD=$MQTT_PASSWORD" >> backend/.env
+
       - name: Compile Backend with PyInstaller
         shell: bash
         run: |
           pyinstaller --onefile --console \
                       --name="${{ env.executable_name }}" \
+                      --add-data="backend/.env${{ matrix.path_sep }}." \
                       --hidden-import=pyttsx3.drivers \
                       --hidden-import=pyttsx3.drivers.sapi5 \
                       --hidden-import=pyttsx3.drivers.espeak \

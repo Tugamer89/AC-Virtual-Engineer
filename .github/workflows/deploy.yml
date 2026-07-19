@@ -1,0 +1,50 @@
+name: Deploy Frontend to GitHub Pages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm --ignore-scripts ci
+        working-directory: ./frontend
+
+      - name: Build
+        run: npm run build
+        working-directory: ./frontend
+        env:
+          VITE_MQTT_WS_URL: ${{ secrets.VITE_MQTT_WS_URL }}
+          VITE_MQTT_USERNAME: ${{ secrets.VITE_MQTT_USERNAME }}
+          VITE_MQTT_PASSWORD: ${{ secrets.VITE_MQTT_PASSWORD }}
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: "./frontend/dist"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

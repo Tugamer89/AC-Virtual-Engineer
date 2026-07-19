@@ -24,12 +24,12 @@ WORKFLOW_FILES=""
 
 # Sort files into their respective categories based on path
 for FILE in $STAGED_FILES; do
-    if [[ "$FILE" == backend/* && "$FILE" == .py ]]; then
-        BACKEND_FILES="$BACKEND_FILES$FILE"
-    elif [[ "$FILE" == frontend/ && "$FILE" =~ \.(js|ts|jsx|tsx|json|css)$ ]]; then
-        FRONTEND_FILES="$FRONTEND_FILES$FILE"
-    elif [[ "$FILE" == .github/workflows/.yml || "$FILE" == .github/workflows/.yaml ]]; then
-        WORKFLOW_FILES="$WORKFLOW_FILES$FILE"
+    if [[ "$FILE" == backend/*.py ]]; then
+        BACKEND_FILES="$BACKEND_FILES $FILE"
+    elif [[ "$FILE" == frontend/* && "$FILE" =~ \.(js|ts|jsx|tsx|json|css)$ ]]; then
+        FRONTEND_FILES="$FRONTEND_FILES $FILE"
+    elif [[ "$FILE" == .github/workflows/*.yml || "$FILE" == .github/workflows/*.yaml ]]; then
+        WORKFLOW_FILES="$WORKFLOW_FILES $FILE"
     fi
 done
 
@@ -49,7 +49,7 @@ if [ -n "$BACKEND_FILES" ]; then
     fi
 
     if command -v flake8 >/dev/null 2>&1; then
-        if ! flake8 $BACKEND_FILES; then
+        if ! flake8 --max-line-length=88 $BACKEND_FILES; then
             echo -e "${RED}Error: Flake8 linting failed on backend.${NC}"
             HAS_ERRORS=1
         fi
@@ -68,15 +68,25 @@ fi
 if [ -n "$FRONTEND_FILES" ]; then
     echo -e "${YELLOW}--> Frontend changes detected. Running Prettier and ESLint...${NC}"
 
-    # Run Prettier in write mode to automatically format
-    if npx --no-install prettier --write $FRONTEND_FILES >/dev/null 2>&1; then
-        echo "Frontend files formatted with Prettier."
-    else
-        echo -e "${RED}Warning: Unable to run Prettier.${NC}"
-    fi
+    (
+        cd frontend || exit 1
 
-    # Run ESLint only on detected files
-    if ! npx --no-install eslint $FRONTEND_FILES; then
+        LOCAL_FRONTEND_FILES="${FRONTEND_FILES//frontend\//}"
+
+        # Run Prettier
+        if npx --no-install prettier --write $LOCAL_FRONTEND_FILES >/dev/null 2>&1; then
+            echo "Frontend files formatted with Prettier."
+        else
+            echo -e "${RED}Warning: Unable to run Prettier.${NC}"
+        fi
+
+        # Run ESLint
+        if ! ESLINT_USE_FLAT_CONFIG=true npx --no-install eslint --fix $LOCAL_FRONTEND_FILES; then
+            exit 1
+        fi
+    )
+
+    if [ $? -ne 0 ]; then
         echo -e "${RED}Error: ESLint failed on frontend.${NC}"
         HAS_ERRORS=1
     fi

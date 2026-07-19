@@ -5,4 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: "/AC-Virtual-Engineer/",
+  server: {
+    allowedHosts: [".ngrok-free.app", "tugamer89.github.io"],
+  },
 });
