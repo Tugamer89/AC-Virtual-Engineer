@@ -108,9 +108,9 @@ async def signaling_server() -> None:
     task.add_done_callback(background_tasks.discard)
 
     tls_context = ssl.create_default_context()
-    mqtt_host: str = os.environ.get("MQTT_HOST")
-    mqtt_user: str = os.environ.get("MQTT_USERNAME")
-    mqtt_pass: str = os.environ.get("MQTT_PASSWORD")
+    mqtt_host = os.environ.get("MQTT_HOST", "127.0.0.1")
+    mqtt_user = os.environ.get("MQTT_USERNAME", "username")
+    mqtt_pass = os.environ.get("MQTT_PASSWORD", "password")
 
     async with aiomqtt.Client(
         hostname=mqtt_host,
