@@ -42,6 +42,12 @@ HAS_ERRORS=0
 if [ -n "$BACKEND_FILES" ]; then
     echo -e "${YELLOW}--> Backend changes detected. Running Black and Flake8...${NC}"
 
+    if command -v isort >/dev/null 2>&1; then
+        isort --profile black $BACKEND_FILES
+    else
+        echo -e "${RED}Warning: 'isort' not found in PATH.${NC}"
+    fi
+
     if command -v black >/dev/null 2>&1; then
         black $BACKEND_FILES
     else

@@ -1,9 +1,9 @@
-import time
-import threading
 import logging
+import os
 import subprocess
 import sys
-import os
+import threading
+import time
 
 logger = logging.getLogger("VirtualEngineer")
 

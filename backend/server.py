@@ -1,23 +1,24 @@
 import asyncio
 import json
-import string
-import aiomqtt
+import logging
+import os
 import secrets
 import ssl
+import string
 import sys
-import os
 import time
+
+import aiomqtt
+from ac_udp_client import ACUDPClient
 from aiortc import (
-    RTCPeerConnection,
-    RTCSessionDescription,
     RTCConfiguration,
     RTCIceServer,
+    RTCPeerConnection,
+    RTCSessionDescription,
 )
 from aiortc.sdp import candidate_from_sdp
-from ac_udp_client import ACUDPClient
-from engineer_logic import VirtualEngineerLogic
 from dotenv import load_dotenv
-import logging
+from engineer_logic import VirtualEngineerLogic
 
 
 def get_resource_path(relative_path):
@@ -33,7 +34,8 @@ logging.getLogger("aioice.ice").setLevel(logging.WARNING)
 
 active_connections: set[RTCPeerConnection] = set()
 active_channels: set[str] = set()
-background_tasks = set() # type: ignore[var-annotated]
+background_tasks = set()  # type: ignore[var-annotated]
+
 
 async def broadcast_telemetry(ac_client, engineer):
     last_packet_time = time.time()
@@ -46,7 +48,7 @@ async def broadcast_telemetry(ac_client, engineer):
                 await asyncio.sleep(3)
                 continue
             last_packet_time = time.time()
-        
+
         telemetry_data = ac_client.get_latest_data()
 
         if telemetry_data:
@@ -57,6 +59,7 @@ async def broadcast_telemetry(ac_client, engineer):
             ac_client.disconnect()
 
         await asyncio.sleep(0.016)
+
 
 def _process_and_broadcast(engineer, telemetry_data):
     engineer.analyze(telemetry_data)
@@ -73,6 +76,7 @@ def _process_and_broadcast(engineer, telemetry_data):
         except Exception as e:
             print(f"Error sending to a client, removing it: {e}")
             active_channels.discard(channel)
+
 
 async def signaling_server():
     pin = "".join(secrets.choice(string.digits) for _ in range(6))
@@ -115,7 +119,9 @@ async def signaling_server():
                     )
                     pc = RTCPeerConnection(
                         configuration=RTCConfiguration(
-                            iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])]
+                            iceServers=[
+                                RTCIceServer(urls=["stun:stun.l.google.com:19302"])
+                            ]
                         )
                     )
                     active_connections.add(pc)
@@ -168,7 +174,7 @@ async def signaling_server():
 
 if __name__ == "__main__":
     if sys.platform.lower() == "win32" or os.name.lower() == "nt":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) # type: ignore[attr-defined]
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type: ignore[attr-defined]
 
     try:
         asyncio.run(signaling_server())

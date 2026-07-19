@@ -1,8 +1,8 @@
+import asyncio
+import logging
 import socket
 import struct
-import logging
 import time
-import asyncio
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -37,7 +37,7 @@ class ACUDPClient:
         logger.info("UDP handshake attempt...")
         loop = asyncio.get_running_loop()
 
-        if getattr(self, 'sock', None) is None:
+        if getattr(self, "sock", None) is None:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.sock.setblocking(False)
 
@@ -126,7 +126,7 @@ class ACUDPClient:
             return False
 
     def disconnect(self):
-        if getattr(self, 'sock', None) is not None:
+        if getattr(self, "sock", None) is not None:
             if self.is_connected:
                 try:
                     self.sock.sendto(
@@ -139,7 +139,7 @@ class ACUDPClient:
             # Close and explicitly destroy the socket instance
             self.sock.close()
             self.sock = None
-            
+
         self.is_connected = False
         logger.info("Disconnected from AC.")
 
@@ -166,7 +166,7 @@ class ACUDPClient:
             unpacked = struct.unpack(
                 self.FMT_CAR_INFO, latest_data[: self.EXPECTED_SIZE]
             )
-            
+
             current_rpm = float(unpacked[21])
             if current_rpm > self.max_rpm:
                 self.max_rpm = current_rpm
