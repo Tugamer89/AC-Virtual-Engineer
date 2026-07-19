@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   Activity,
   Gauge,
@@ -8,6 +8,8 @@ import {
   ArrowDownToLine,
 } from "lucide-react";
 import mqtt from "mqtt";
+
+// --- Types & Interfaces ---
 
 interface TelemetryData {
   speed_kmh: number;
@@ -26,18 +28,36 @@ interface TelemetryData {
   suspension_height: number[];
 }
 
+type ConnectionStatus = "disconnected" | "connecting" | "connected";
+
+// --- Main Component ---
+
 export default function App() {
+  // --- State Management ---
+
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [status, setStatus] = useState<
-    "disconnected" | "connecting" | "connected"
-  >("disconnected");
-  const [pin, setPin] = useState("");
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [status, setStatus] = useState<ConnectionStatus>("disconnected");
+
+  const [pin, setPin] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlPin = searchParams.get("pin");
+      if (urlPin && /^\d{6}$/.test(urlPin)) {
+        return urlPin;
+      }
+    }
+    return "";
+  });
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const watchdogRef = useRef<NodeJS.Timeout | null>(null);
 
-  const startConnection = async () => {
+  // --- Handlers & Logic ---
+
+  const startConnection = useCallback(async () => {
     if (pin.length !== 6) return;
+
     setStatus("connecting");
 
     const brokerUrl = import.meta.env.VITE_MQTT_WS_URL;
@@ -45,10 +65,12 @@ export default function App() {
     const topicClient = `acve/signaling/${pin}/client`;
 
     const mqttOptions: mqtt.IClientOptions = {};
-    if (import.meta.env.VITE_MQTT_USERNAME)
+    if (import.meta.env.VITE_MQTT_USERNAME) {
       mqttOptions.username = import.meta.env.VITE_MQTT_USERNAME;
-    if (import.meta.env.VITE_MQTT_PASSWORD)
+    }
+    if (import.meta.env.VITE_MQTT_PASSWORD) {
       mqttOptions.password = import.meta.env.VITE_MQTT_PASSWORD;
+    }
 
     const client = mqtt.connect(brokerUrl, mqttOptions);
 
@@ -66,30 +88,52 @@ export default function App() {
         maxRetransmits: 0,
       });
 
+      // Data Channel Event Handlers
       dc.onopen = () => {
         console.log("WebRTC P2P channel opened!");
         setStatus("connected");
         setIsConnected(true);
-        client.end();
+        client.end(); // Close MQTT connection once P2P is established
+
+        // Update URL to reflect active PIN without reloading
+        const newUrl = `${window.location.pathname}?pin=${pin}`;
+        window.history.replaceState({}, "", newUrl);
       };
 
       dc.onclose = () => {
         console.log("WebRTC channel closed.");
+        if (watchdogRef.current) clearTimeout(watchdogRef.current);
+
         setStatus("disconnected");
         setIsConnected(false);
         setTelemetry(null);
+
+        // Reset URL gracefully
+        window.history.replaceState({}, "", window.location.pathname);
       };
 
-      dc.onmessage = (e) => {
+      const watchDogMessage_func = () => {
+        console.warn("No data received for 6s. Has the game closed?");
+        setTelemetry(null);
+      };
+
+      dc.onmessage = (e: MessageEvent) => {
         try {
           const data: TelemetryData = JSON.parse(e.data);
           setTelemetry(data);
+
+          if (watchdogRef.current) {
+            clearTimeout(watchdogRef.current);
+          }
+
+          watchdogRef.current = setTimeout(watchDogMessage_func, 6000);
         } catch (error) {
-          console.error("Error parsing WebRTC data:", error);
+          console.error("Error parsing WebRTC telemetry data:", error);
         }
       };
 
-      pc.onicecandidate = (e) => {
+      // WebRTC ICE Candidate handling
+      pc.onicecandidate = (e: RTCPeerConnectionIceEvent) => {
         if (e.candidate) {
           client.publish(
             topicClient,
@@ -101,16 +145,22 @@ export default function App() {
         }
       };
 
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
+      try {
+        // Create and send SDP Offer
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
 
-      client.publish(
-        topicClient,
-        JSON.stringify({
-          type: offer.type,
-          sdp: offer.sdp,
-        }),
-      );
+        client.publish(
+          topicClient,
+          JSON.stringify({
+            type: offer.type,
+            sdp: offer.sdp,
+          }),
+        );
+      } catch (err) {
+        console.error("Failed to create WebRTC offer:", err);
+        setStatus("disconnected");
+      }
     });
 
     client.on("message", async (_, message) => {
@@ -130,82 +180,124 @@ export default function App() {
       console.error("MQTT connection error:", err);
       setStatus("disconnected");
     });
-  };
+  }, [pin]);
 
+  // --- Effects ---
+
+  // Cleanup effect: Ensure RTCPeerConnection is properly closed upon unmounting
   useEffect(() => {
     return () => {
       if (pcRef.current) {
         pcRef.current.close();
       }
+
+      if (watchdogRef.current) {
+        clearTimeout(watchdogRef.current);
+      }
     };
   }, []);
 
-  const formatGear = (gear: number) => {
+  // Auto-connect effect properly tracking memoized startConnection dependency.
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlPin = searchParams.get("pin");
+
+    if (pin === urlPin && pin.length === 6 && status === "disconnected") {
+      const connectionTimeout = setTimeout(() => {
+        startConnection();
+      }, 0);
+
+      // Cleanup function to clear the timeout if the component unmounts
+      return () => clearTimeout(connectionTimeout);
+    }
+  }, [pin, status, startConnection]);
+
+  // --- Formatters ---
+
+  const formatGear = (gear: number): string => {
     if (gear === -1) return "R";
     if (gear === 0) return "N";
     return gear.toString();
   };
 
-  const formatPedal = (value: number) => {
+  const formatPedal = (value: number): string => {
     return `${Math.round(value * 100)}%`;
   };
 
-  const formatTime = (ms: number) => {
+  const formatTime = (ms: number): string => {
     if (!ms || ms === 0) return "--:--.---";
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     const milliseconds = ms % 1000;
-    return `${minutes}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}.${milliseconds
+      .toString()
+      .padStart(3, "0")}`;
   };
 
-  let mainContent;
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Restrict input to digits only
+    setPin(e.target.value.replace(/\D/g, ""));
+  };
 
-  if (!isConnected) {
-    mainContent = (
-      <div className="flex flex-col items-center justify-center h-[60vh] text-slate-500 space-y-6">
-        <AlertTriangle className="w-16 h-16 opacity-50" />
-        <div className="text-center space-y-2">
-          <p className="text-xl">Waiting for connection to Assetto Corsa...</p>
-          <p className="text-sm opacity-70">
-            Enter the PIN generated by the backend
-          </p>
-        </div>
+  const handleShareClick = () => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?pin=${pin}`;
+    navigator.clipboard.writeText(shareUrl);
+    alert("Share link copied!");
+  };
 
-        {/* PIN */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
-          <input
-            type="text"
-            maxLength={6}
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} // Only numbers
-            placeholder="123456"
-            className="bg-slate-900 border border-slate-700 text-center text-2xl tracking-widest font-mono text-slate-100 rounded-lg px-6 py-3 w-48 focus:outline-none focus:border-blue-500 transition-colors"
-          />
-          <button
-            onClick={startConnection}
-            disabled={status === "connecting" || pin.length !== 6}
-            className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-semibold px-8 py-3 rounded-lg transition-colors w-full sm:w-auto"
-          >
-            {status === "connecting" ? "Connecting..." : "Connect"}
-          </button>
+  // --- Render ---
+
+  const renderContent = () => {
+    if (!isConnected) {
+      return (
+        <div className="flex flex-col items-center justify-center h-[60vh] text-slate-500 space-y-6">
+          <AlertTriangle className="w-16 h-16 opacity-50" />
+          <div className="text-center space-y-2">
+            <p className="text-xl">
+              Waiting for connection to Assetto Corsa...
+            </p>
+            <p className="text-sm opacity-70">
+              Enter the PIN generated by the backend
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
+            <input
+              type="text"
+              maxLength={6}
+              value={pin}
+              onChange={handlePinChange}
+              placeholder="123456"
+              className="bg-slate-900 border border-slate-700 text-center text-2xl tracking-widest font-mono text-slate-100 rounded-lg px-6 py-3 w-48 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+            <button
+              onClick={startConnection}
+              disabled={status === "connecting" || pin.length !== 6}
+              className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-semibold px-8 py-3 rounded-lg transition-colors w-full sm:w-auto"
+            >
+              {status === "connecting" ? "Connecting..." : "Connect"}
+            </button>
+          </div>
         </div>
-      </div>
-    );
-  } else if (!telemetry) {
-    mainContent = (
-      <div className="flex items-center justify-center h-[60vh] text-slate-500">
-        <p className="text-xl animate-pulse">Receiving P2P data...</p>
-      </div>
-    );
-  } else {
+      );
+    }
+
+    if (!telemetry) {
+      return (
+        <div className="flex items-center justify-center h-[60vh] text-slate-500">
+          <p className="text-xl animate-pulse">Receiving P2P data...</p>
+        </div>
+      );
+    }
+
     const rpmPercentage = Math.min(
       (telemetry.engine_rpm / telemetry.max_rpm) * 100,
       100,
     );
 
-    mainContent = (
+    return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Session Info - Full Width */}
+        {/* Session Info */}
         <div className="col-span-full bg-slate-900 border border-slate-800 rounded-xl p-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Car className="text-slate-400" />
@@ -226,7 +318,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Powertrain: Speed, Gear, RPM */}
+        {/* Powertrain */}
         <div className="xl:col-span-2 grid grid-cols-2 gap-6 bg-slate-900 border border-slate-800 rounded-xl p-6">
           <div className="flex flex-col items-center justify-center border-r border-slate-800">
             <Gauge className="text-blue-500 w-8 h-8 mb-4 opacity-50" />
@@ -246,7 +338,9 @@ export default function App() {
             </div>
             <div className="w-full bg-slate-800 h-2 mt-4 rounded-full overflow-hidden max-w-30">
               <div
-                className={`h-full transition-all duration-75 ${rpmPercentage > 95 ? "bg-red-500" : "bg-amber-400"}`}
+                className={`h-full transition-all duration-75 ${
+                  rpmPercentage > 95 ? "bg-red-500" : "bg-amber-400"
+                }`}
                 style={{ width: `${rpmPercentage}%` }}
               ></div>
             </div>
@@ -309,7 +403,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Advanced Chassis Data (Grid format for 4 corners) */}
+        {/* Suspension Data */}
         <div className="col-span-full xl:col-span-2 grid grid-cols-2 gap-4 bg-slate-900 border border-slate-800 rounded-xl p-6">
           <div className="col-span-full flex items-center gap-2 mb-2 text-slate-400 border-b border-slate-800 pb-2">
             <ArrowDownToLine className="w-4 h-4" />
@@ -317,7 +411,6 @@ export default function App() {
               Suspension Travel (M)
             </h2>
           </div>
-          {/* FL & FR */}
           <div className="flex justify-between p-3 bg-slate-950 rounded-lg border border-slate-800">
             <span className="text-slate-500 text-xs">FL</span>
             <span className="font-mono text-sm">
@@ -330,7 +423,6 @@ export default function App() {
               {telemetry.suspension_height[1].toFixed(3)}
             </span>
           </div>
-          {/* RL & RR */}
           <div className="flex justify-between p-3 bg-slate-950 rounded-lg border border-slate-800">
             <span className="text-slate-500 text-xs">RL</span>
             <span className="font-mono text-sm">
@@ -346,7 +438,7 @@ export default function App() {
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-6">
@@ -359,8 +451,19 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2">
+          {isConnected && (
+            <button
+              onClick={handleShareClick}
+              className="text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded border border-slate-700 transition-colors"
+            >
+              Share Session URL
+            </button>
+          )}
+
           <div
-            className={`w-3 h-3 rounded-full ${isConnected ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
+            className={`w-3 h-3 rounded-full ${
+              isConnected ? "bg-emerald-500 animate-pulse" : "bg-red-500"
+            }`}
           ></div>
           <span className="text-sm font-medium text-slate-400 uppercase tracking-widest">
             {isConnected ? "Telemetry Active" : "Offline"}
@@ -368,7 +471,7 @@ export default function App() {
         </div>
       </header>
 
-      {mainContent}
+      {renderContent()}
     </div>
   );
 }

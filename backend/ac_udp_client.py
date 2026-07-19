@@ -37,6 +37,10 @@ class ACUDPClient:
         logger.info("UDP handshake attempt...")
         loop = asyncio.get_running_loop()
 
+        if getattr(self, 'sock', None) is None:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.sock.setblocking(False)
+
         try:
             self.sock.sendto(
                 self._pack_handshake(self.OP_HANDSHAKE),
@@ -98,6 +102,8 @@ class ACUDPClient:
                         break
                 except asyncio.TimeoutError:
                     continue
+                except ConnectionResetError:
+                    return False
 
             else:
                 logger.error("Handshake failed: no valid data received in time.")
@@ -120,14 +126,22 @@ class ACUDPClient:
             return False
 
     def disconnect(self):
-        if self.is_connected:
-            self.sock.sendto(
-                self._pack_handshake(self.OP_DISMISS),
-                (self.SERVER_IP, self.SERVER_PORT),
-            )
+        if getattr(self, 'sock', None) is not None:
+            if self.is_connected:
+                try:
+                    self.sock.sendto(
+                        self._pack_handshake(self.OP_DISMISS),
+                        (self.SERVER_IP, self.SERVER_PORT),
+                    )
+                except Exception as e:
+                    logger.debug(f"Could not send dismiss packet: {e}")
+
+            # Close and explicitly destroy the socket instance
             self.sock.close()
-            self.is_connected = False
-            logger.info("Disconnected from AC.")
+            self.sock = None
+            
+        self.is_connected = False
+        logger.info("Disconnected from AC.")
 
     def get_latest_data(self) -> dict:
         if not self.is_connected:
