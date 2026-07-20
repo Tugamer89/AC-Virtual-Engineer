@@ -86,6 +86,29 @@ export default function App() {
       });
       pcRef.current = pc;
 
+      pc.onconnectionstatechange = () => {
+        console.log("WebRTC Connection State:", pc.connectionState);
+
+        if (
+          pc.connectionState === "disconnected" ||
+          pc.connectionState === "failed" ||
+          pc.connectionState === "closed"
+        ) {
+          console.warn("Backend connection closed. Returning to PIN screen.");
+
+          if (watchdogRef.current) clearTimeout(watchdogRef.current);
+
+          // Reset all states to trigger the fallback UI
+          setStatus("disconnected");
+          setIsConnected(false);
+          setTelemetry(null);
+          setPin("");
+
+          // Clean up the URL by removing the PIN parameter
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      };
+
       const dc = pc.createDataChannel("telemetry", {
         ordered: false,
         maxRetransmits: 0,
@@ -116,7 +139,7 @@ export default function App() {
       };
 
       const watchDogMessage_func = () => {
-        console.warn("No data received for 6s. Has the game closed?");
+        console.warn("No data received for 6s. Connection timed out.");
         setTelemetry(null);
       };
 
@@ -298,8 +321,16 @@ export default function App() {
 
     if (!telemetry) {
       return (
-        <div className="flex items-center justify-center h-[60vh] text-slate-500">
-          <p className="text-xl animate-pulse">Receiving P2P data...</p>
+        <div className="flex flex-col items-center justify-center h-[60vh] text-slate-500 space-y-4">
+          <Activity className="w-12 h-12 animate-pulse text-blue-500/50" />
+          <div className="text-center space-y-2">
+            <p className="text-xl font-semibold tracking-wide text-slate-300">
+              Waiting for Assetto Corsa...
+            </p>
+            <p className="text-sm opacity-70">
+              Connection established. Enter a track session to stream telemetry.
+            </p>
+          </div>
         </div>
       );
     }
