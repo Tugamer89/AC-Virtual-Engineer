@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.2.0](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.13...v0.2.0) (2026-07-20)
+
+
+### Features
+
+* add formatting commands for backend and frontend, integrate isort and eslint-plugin-simple-import-sort ([fc7e980](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/fc7e9800f18fb72471ba31f0cd6d5c8dcd20fc7c))
+* add share session URL functionality with visual feedback ([4888f51](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/4888f51cd06f285894f7262007f8457d5262c0e6))
+* add WebRTC connection state handling and improve UI feedback during connection ([5b83420](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/5b83420aa9285650da87dfa276cd21a1621b203f))
+* enhance telemetry analysis and communication logic in Virtual Engineer ([92a91bd](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/92a91bd61fb5f8fe4464031f91fa9f16976f9826)), closes [#6](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/6)
+* enhance telemetry data structure with additional metrics and improve RPM display ([ef40b61](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/ef40b61675b1e7ddebfa0fb6e15a239b567cb1f8)), closes [#5](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/5)
+* implement timeout handling and graceful shutdown for WebRTC connections ([b8fb682](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/b8fb6828220d3ffb41a080356c34affe2665a5c1))
+* integrate MQTT for WebRTC signaling and telemetry data transfer ([2e99185](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/2e99185ff660ed16382fe8b71e93738ef8e1ed64)), closes [#8](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/8) [#7](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/7)
+
+
+### Bug Fixes
+
+* add type hint ignore for background_tasks definition ([50f2db4](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/50f2db432a74fa051ed7da7d1f4d2e6b14a10a5b))
+* add type hints for active_connections and active_channels, ignore type check for Windows event loop policy ([6362386](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/63623868e9c8f3c6c59e1d80ed1553e53b56b0ca))
+* change bump-patch-for-minor-pre-major setting to false ([8e2610d](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/8e2610d31a6ab654c79f9ce4922cdcaffed39ada))
+* improve channel message sending logic in broadcast_telemetry function ([230ab02](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/230ab02fcb19476b344cc82156a3e46be433f1bc))
+* improve UDP connection handling and add watchdog for telemetry data ([8c3f46e](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/8c3f46e7f9152b41168a7cb5c93916983f59eaec))
+* remove unnecessary whitespace in ACUDPClient class for cleaner code ([a4dad73](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/a4dad73004727b4c6b410c2049e794a09a609622))
+* replace random PIN generation with secrets for better security ([7762111](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/77621118c4f29e2fc5ced14514f28d568509f36f))
+* set default values for MQTT environment variables to improve connection reliability ([bbaf010](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/bbaf010b634a13d504f80205eedc692156d0e549))
+* translate log messages and comments to English for consistency ([7ac79fa](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/7ac79fae495e0f452a6b2556ac5a028dda98231b))
+* update telemetry data type annotations for improved clarity and type safety ([170f219](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/170f2192114fffed0aad81b1b07d6fdc598d24e8))
+* update telemetry parameter type in analyze method for improved type safety ([0cb08d0](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/0cb08d020d6db08b877dc218e5b905a13ea376cb))
+* update telemetry server startup message for clarity ([1a7741a](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/1a7741a3f1befbe1377905fbb22cca422cccbad1))
+* update type hint ignore for background_tasks definition ([01c8e37](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/01c8e37f4e7791786a4f1ca91ab02fb32ff8d9d6))
+
 ## [0.1.13](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.12...v0.1.13) (2026-07-17)
 
 
