@@ -51,6 +51,8 @@ class ACUDPClient:
         self.car_name: str = ""
         self.track_name: str = ""
         self.max_rpm: float = 8000.0
+        
+        self.last_packet_time: float = 0.0
 
     def _pack_handshake(self, operation_id: int) -> bytes:
         """Packs the handshake request bytes."""
@@ -117,6 +119,7 @@ class ACUDPClient:
                 (self.SERVER_IP, self.SERVER_PORT),
             )
             self.is_connected = True
+            self.last_packet_time = time.time()
             return True
 
         except Exception as e:
@@ -159,6 +162,8 @@ class ACUDPClient:
             and chr(latest_data[0]) == "a"
             and len(latest_data) >= self.EXPECTED_SIZE
         ):
+            self.last_packet_time = time.time()
+            
             unpacked = struct.unpack(
                 self.FMT_CAR_INFO, latest_data[: self.EXPECTED_SIZE]
             )
@@ -183,4 +188,9 @@ class ACUDPClient:
                 "best_lap": int(unpacked[16]),
                 "suspension_height": list(unpacked[77:81]),
             }
+            
+        if time.time() - self.last_packet_time > 3.0:
+            logger.info("Session ended by user (Timeout). Ready for next session.")
+            self.is_connected = False
+
         return None

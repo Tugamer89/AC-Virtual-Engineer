@@ -139,18 +139,15 @@ async def signaling_server() -> None:
         except Exception as e:
             logger.exception(f"Signaling loop interrupted: {e}")
         finally:
-            logger.info("Terminating all active WebRTC sessions...")
-            for pc in active_connections.copy():
-                await pc.close()
-            active_connections.clear()
-            active_channels.clear()
             ac_client.disconnect()
 
 
-async def _handle_offer(data: dict, mqtt_client: aiomqtt.Client, topic_host: str) -> None:
+async def _handle_offer(
+    data: dict, mqtt_client: aiomqtt.Client, topic_host: str
+) -> None:
     """Handles incoming WebRTC SDP offers."""
     logger.info("SDP Offer received. Initiating WebRTC negotiation...")
-    
+
     pc = RTCPeerConnection(
         configuration=RTCConfiguration(
             iceServers=[RTCIceServer(urls=["stun:stun.l.google.com:19302"])]
@@ -178,29 +175,60 @@ async def _handle_offer(data: dict, mqtt_client: aiomqtt.Client, topic_host: str
 
     await mqtt_client.publish(
         topic_host,
-        json.dumps({
-            "type": pc.localDescription.type,
-            "sdp": pc.localDescription.sdp,
-        }),
+        json.dumps(
+            {
+                "type": pc.localDescription.type,
+                "sdp": pc.localDescription.sdp,
+            }
+        ),
     )
+
 
 async def _handle_candidate(data: dict) -> None:
     """Handles incoming ICE candidates."""
     candidate_info = data.get("candidate")
     if candidate_info and active_connections:
-        pc = list(active_connections)[-1] 
+        pc = list(active_connections)[-1]
         candidate = candidate_from_sdp(candidate_info["candidate"])
         candidate.sdpMid = candidate_info["sdpMid"]
         candidate.sdpMLineIndex = candidate_info["sdpMLineIndex"]
         await pc.addIceCandidate(candidate)
 
 
+async def shutdown_webrtc():
+    """Manages the graceful shutdown of asynchronous connections, ignoring the previous cancellation."""
+    logger.info("Terminating all active WebRTC sessions...")
+
+    close_tasks = [pc.close() for pc in active_connections]
+    if close_tasks:
+        await asyncio.gather(*close_tasks, return_exceptions=True)
+
+    active_connections.clear()
+    active_channels.clear()
+
+
 if __name__ == "__main__":
     if sys.platform.lower() == "win32" or os.name.lower() == "nt":
         # Required for aioice/aiortc on Windows environments
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy()) # type: ignore[attr-defined]
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type: ignore[attr-defined]
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     try:
         asyncio.run(signaling_server())
     except KeyboardInterrupt:
         logger.info("Process terminated by user.")
+    finally:
+        loop.run_until_complete(shutdown_webrtc())
+
+        pending_tasks = list(background_tasks)
+        for task in pending_tasks:
+            task.cancel()
+
+        if pending_tasks:
+            loop.run_until_complete(
+                asyncio.gather(*pending_tasks, return_exceptions=True)
+            )
+
+        loop.close()
