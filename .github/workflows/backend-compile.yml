@@ -70,6 +70,7 @@ jobs:
         run: python backend/scripts/generate_version.py
 
       - name: Generate .env file
+        shell: bash
         env:
           MQTT_HOST: ${{ secrets.MQTT_HOST }}
           MQTT_USERNAME: ${{ secrets.MQTT_USERNAME }}
