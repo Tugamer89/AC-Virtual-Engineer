@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.2.0...v0.2.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* specify shell for generating .env file in backend compile workflow ([231ca5f](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/231ca5f6e3c850562c8d4f6ba798221bfd04be1a))
+
 ## [0.2.0](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.1.13...v0.2.0) (2026-07-20)
 
 
