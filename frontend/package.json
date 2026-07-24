@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "lucide-react": "^1.25.0",
+    "lucide-react": "^1.26.0",
     "mqtt": "^5.15.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
@@ -23,12 +23,12 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
     "autoprefixer": "^10.5.4",
-    "eslint": "^10.6.0",
+    "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "globals": "^17.7.0",
-    "postcss": "^8.5.22",
+    "postcss": "^8.5.23",
     "tailwindcss": "^4.3.2",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",
