@@ -3,7 +3,7 @@ import logging
 import socket
 import struct
 import time
-from typing import List, Optional, Tuple, TypedDict
+from typing import List, Optional, TypedDict
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

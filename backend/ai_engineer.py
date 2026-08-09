@@ -1,5 +1,4 @@
 import atexit
-import json
 import logging
 import os
 import queue
@@ -10,7 +9,7 @@ import time
 import urllib.error
 import urllib.request
 import wave
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import ollama
@@ -46,7 +45,7 @@ class OllamaManager:
 
         logger.info("Starting Ollama background process...")
 
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         # Prevent terminal window popping up on Windows environments
         if sys.platform == "win32":
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
@@ -92,6 +91,7 @@ class RaceEngineerAI:
 
     def __init__(self, logic_engine: VirtualEngineerLogic):
         self.logic = logic_engine
+        self.ptt_controller: Optional[PushToTalkController] = None
 
         self.ollama_manager = OllamaManager()
         self.ollama_manager.start()
@@ -186,7 +186,7 @@ class PushToTalkController:
         self.ai_engine = ai_engine
         self.key_char = key_char
         self.is_recording = False
-        self.audio_data = []
+        self.audio_data: list[bytes] = []
         self.sample_rate = 16000
         self.stream: Optional[sd.InputStream] = None
 
