@@ -308,6 +308,7 @@ export default function App() {
               className="bg-slate-900 border border-slate-700 text-center text-2xl tracking-widest font-mono text-slate-100 rounded-lg px-6 py-3 w-48 focus:outline-none focus:border-blue-500 transition-colors"
             />
             <button
+              type="button"
               onClick={startConnection}
               disabled={status === "connecting" || pin.length !== 6}
               className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white font-semibold px-8 py-3 rounded-lg transition-colors w-full sm:w-auto"
@@ -498,6 +499,7 @@ export default function App() {
         <div className="flex items-center gap-2">
           {isConnected && (
             <button
+              type="button"
               onClick={handleShareClick}
               className={`flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg border transition-all duration-300 shadow-sm ${
                 isCopied
