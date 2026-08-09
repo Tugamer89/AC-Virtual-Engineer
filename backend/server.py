@@ -10,6 +10,7 @@ from typing import Any, Set
 
 import aiomqtt
 from ac_udp_client import ACUDPClient, TelemetryData
+from ai_engineer import PushToTalkController, RaceEngineerAI
 from aiortc import (
     RTCConfiguration,
     RTCIceServer,
@@ -95,6 +96,8 @@ async def signaling_server() -> None:
 
     ac_client = ACUDPClient()
     engineer = VirtualEngineerLogic()
+    ai_engine = RaceEngineerAI(engineer)
+    ai_engine.ptt_controller = PushToTalkController(ai_engine, key_char="v")
 
     print("=" * 60)
     print("TELEMETRY BACKEND ONLINE!")
