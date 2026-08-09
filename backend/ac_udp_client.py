@@ -172,7 +172,7 @@ class ACUDPClient:
 
     def _decode_string(self, raw_bytes: bytes, encoding: str) -> str:
         """Helper method to decode and clean AC byte strings."""
-        return raw_bytes.decode(encoding, "ignore").strip("\x00").split("%")[0]
+        return raw_bytes.decode(encoding, "ignore").strip("\x00").partition("%")[0]
 
     def disconnect(self) -> None:
         """Sends a dismissal signal and closes the socket."""

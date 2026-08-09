@@ -56,21 +56,21 @@ class VirtualEngineerLogic:
 
         logger.info("Virtual Engineer Brain Initialized with advanced Temporal Heuristics.")
 
+    def _run_tts(self, text: str) -> None:
+        kwargs: Dict[str, Any] = {}
+        if sys.platform == "win32":
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+        try:
+            subprocess.run([sys.executable, self.worker_script, text], **kwargs)
+        except Exception as e:
+            logger.exception(f"TTS Worker execution failed: {e}")
+
     def speak(self, text: str) -> None:
         """Dispatches text-to-speech to a background worker."""
         logger.info(f"[ENGINEER COMMS]: {text}")
 
-        def _run_tts() -> None:
-            kwargs: Dict[str, Any] = {}
-            if sys.platform == "win32":
-                kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-
-            try:
-                subprocess.run([sys.executable, self.worker_script, text], **kwargs)
-            except Exception as e:
-                logger.exception(f"TTS Worker execution failed: {e}")
-
-        threading.Thread(target=_run_tts, daemon=True).start()
+        threading.Thread(target=self._run_tts, args=(text,), daemon=True).start()
 
     def _can_warn(self, warning_type: str, current_time: float) -> bool:
         """Checks if a specific warning type is off cooldown."""
