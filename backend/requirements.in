@@ -5,5 +5,5 @@ python-dotenv>=1.0.1
 faster-whisper>=1.2.1
 ollama>=0.6.2
 sounddevice>=0.5.5
-numpy>=2.5.1
+numpy>=2.5.2
 pynput>=1.8.2
