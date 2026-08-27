@@ -135,7 +135,9 @@ class RaceEngineerAI:
     def _transcribe(self, audio_path: str) -> str:
         """Converts saved WAV file to text using Whisper."""
         try:
-            segments, _ = self.stt.transcribe(audio_path, beam_size=5, vad_filter=True, language="en")
+            segments, _ = self.stt.transcribe(
+                audio_path, beam_size=5, vad_filter=True, language="en"
+            )
             text = " ".join([seg.text for seg in segments]).strip()
             logger.info(f"[DRIVER VOICE]: '{text}'")
             return text
