@@ -36,15 +36,11 @@ class VirtualEngineerLogic:
 
         # Exponential Moving Average (EMA) and Event Trackers
         self.ema_alpha = 0.15  # Smoothing factor (lower = smoother but slower reaction)
-        self.ema_state = {
-            "front_slip": 0.0,
-            "rear_slip": 0.0,
-            "brake": 0.0
-        }
+        self.ema_state = {"front_slip": 0.0, "rear_slip": 0.0, "brake": 0.0}
         self.event_durations = {
             "lockup_start": 0.0,
             "understeer_start": 0.0,
-            "oversteer_start": 0.0
+            "oversteer_start": 0.0,
         }
 
         self.worker_script: str = os.path.join(
@@ -54,7 +50,9 @@ class VirtualEngineerLogic:
         # State tracker for AI tool calling
         self.latest_telemetry: Optional[TelemetryData] = None
 
-        logger.info("Virtual Engineer Brain Initialized with advanced Temporal Heuristics.")
+        logger.info(
+            "Virtual Engineer Brain Initialized with advanced Temporal Heuristics."
+        )
 
     def _run_tts(self, text: str) -> None:
         kwargs: Dict[str, Any] = {}
@@ -85,26 +83,30 @@ class VirtualEngineerLogic:
 
     def _update_ema(self, key: str, current_val: float) -> float:
         """Updates the Exponential Moving Average for a given telemetry key."""
-        self.ema_state[key] = (self.ema_alpha * current_val) + ((1 - self.ema_alpha) * self.ema_state[key])
+        self.ema_state[key] = (self.ema_alpha * current_val) + (
+            (1 - self.ema_alpha) * self.ema_state[key]
+        )
         return self.ema_state[key]
 
     def _handle_sustained_event(
-        self, 
-        event_key: str, 
-        condition: bool, 
-        sustain_time: float, 
-        message: str, 
-        current_time: float
+        self,
+        event_key: str,
+        condition: bool,
+        sustain_time: float,
+        message: str,
+        current_time: float,
     ) -> None:
         """Helper to manage sustained telemetry events, reducing cognitive complexity."""
         start_key = f"{event_key}_start"
-        
+
         if condition:
             # Event just started
             if math.isclose(self.event_durations[start_key], 0.0, abs_tol=1e-4):
                 self.event_durations[start_key] = current_time
             # Event has been sustained past the threshold
-            elif current_time - self.event_durations[start_key] > sustain_time and self._can_warn(event_key, current_time):
+            elif current_time - self.event_durations[
+                start_key
+            ] > sustain_time and self._can_warn(event_key, current_time):
                 self.speak(message)
                 self._update_cooldown(event_key, current_time)
         else:
@@ -142,7 +144,7 @@ class VirtualEngineerLogic:
             condition=(ema_brake > 0.75 and ema_front_slip > 0.12 and speed > 40),
             sustain_time=0.35,
             message="Watch your braking, locking the fronts. Trail off the pedal sooner.",
-            current_time=current_time
+            current_time=current_time,
         )
 
         # 2. Understeer Detection
@@ -151,35 +153,49 @@ class VirtualEngineerLogic:
             condition=(ema_front_slip > 0.12 and ema_rear_slip < 0.05 and speed > 50),
             sustain_time=0.5,
             message="Understeer detected mid-corner. Ease off the throttle or reduce entry speed.",
-            current_time=current_time
+            current_time=current_time,
         )
 
         # 3. Snap Oversteer Detection
         self._handle_sustained_event(
             event_key="oversteer",
-            condition=(ema_rear_slip > 0.15 and ema_front_slip < 0.06 and speed > 50 and gear > 1),
+            condition=(
+                ema_rear_slip > 0.15
+                and ema_front_slip < 0.06
+                and speed > 50
+                and gear > 1
+            ),
             sustain_time=0.4,
             message="Rear grip is snapping. Smooth out your throttle application on exit.",
-            current_time=current_time
+            current_time=current_time,
         )
 
         # 4. Over-revving Detection (Immediate trigger, no sustain tracking required)
-        if rpm > max_rpm * 0.98 and gear > 0 and self._can_warn("overrev", current_time):
-            self.speak("Engine is over-revving. Check your shift points to protect the engine.")
+        if (
+            rpm > max_rpm * 0.98
+            and gear > 0
+            and self._can_warn("overrev", current_time)
+        ):
+            self.speak(
+                "Engine is over-revving. Check your shift points to protect the engine."
+            )
             self._update_cooldown("overrev", current_time)
 
     def get_llm_context(self) -> str:
         """Formats a human-readable telemetry summary for the LLM prompt."""
         if not self.latest_telemetry:
-            return "No telemetry data available. The car might be offline or in the pits."
+            return (
+                "No telemetry data available. The car might be offline or in the pits."
+            )
 
         t = self.latest_telemetry
         speed = round(t.get("speed_kmh", 0))
         gear = t.get("gear", 0)
-        
+
         # Helper to convert ms to standard m:s.ms timing
         def format_time(ms_val):
-            if ms_val <= 0: return "N/A"
+            if ms_val <= 0:
+                return "N/A"
             mins = int(ms_val // 60000)
             secs = (ms_val % 60000) / 1000.0
             return f"{mins}:{secs:.3f}"
