@@ -7,4 +7,4 @@ ollama>=0.6.2
 sounddevice>=0.5.5
 numpy>=2.5.1
 pynput>=1.8.2
-setuptools
+setuptools>=84.0.0
