@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.1](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.3.0...v0.3.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* deps pin setuptools 10732189501354200111 ([#59](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/59)) ([06368fc](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/06368fc4f2e363e1159e5e5129efadfc17cca6f5))
+* **deps:** pin setuptools to resolve require-hashes error ([#56](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/56)) ([ae9d74b](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/ae9d74b675544ad5f4295dd20fe71d195eaf8b30))
+* **deps:** pin setuptools to resolve require-hashes error with ctranslate2 ([ae9d74b](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/ae9d74b675544ad5f4295dd20fe71d195eaf8b30))
+
 ## [0.3.0](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.2.1...v0.3.0) (2026-08-09)
 
 
