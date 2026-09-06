@@ -47,6 +47,21 @@ class VirtualEngineerLogic:
             os.path.dirname(__file__), "tts_worker.py"
         )
 
+        # Initialize persistent TTS worker
+        kwargs: Dict[str, Any] = {}
+        if sys.platform == "win32":
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+        self.worker = subprocess.Popen(
+            [sys.executable, self.worker_script],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            bufsize=1,  # Line buffered
+            **kwargs,
+        )
+
         # State tracker for AI tool calling
         self.latest_telemetry: Optional[TelemetryData] = None
 
@@ -54,21 +69,28 @@ class VirtualEngineerLogic:
             "Virtual Engineer Brain Initialized with advanced Temporal Heuristics."
         )
 
-    def _run_tts(self, text: str) -> None:
-        kwargs: Dict[str, Any] = {}
-        if sys.platform == "win32":
-            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
-
-        try:
-            subprocess.run([sys.executable, self.worker_script, text], **kwargs)
-        except Exception as e:
-            logger.exception(f"TTS Worker execution failed: {e}")
+    def __del__(self) -> None:
+        if hasattr(self, "worker") and self.worker.poll() is None:
+            try:
+                self.worker.terminate()
+                self.worker.wait(timeout=1.0)
+            except Exception as e:
+                logger.error(f"Failed to terminate TTS worker: {e}")
 
     def speak(self, text: str) -> None:
         """Dispatches text-to-speech to a background worker."""
         logger.info(f"[ENGINEER COMMS]: {text}")
 
-        threading.Thread(target=self._run_tts, args=(text,), daemon=True).start()
+        if hasattr(self, "worker") and self.worker.poll() is None and self.worker.stdin:
+            try:
+                # Replace newlines as they act as a separator in the stdin pipe
+                clean_text = text.replace("\n", " ").strip()
+                self.worker.stdin.write(clean_text + "\n")
+                self.worker.stdin.flush()
+            except Exception as e:
+                logger.exception(f"Failed to send text to TTS worker: {e}")
+        else:
+            logger.error("TTS worker is not running.")
 
     def _can_warn(self, warning_type: str, current_time: float) -> bool:
         """Checks if a specific warning type is off cooldown."""
