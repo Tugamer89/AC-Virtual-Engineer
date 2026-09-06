@@ -99,11 +99,13 @@ async def signaling_server() -> None:
     ai_engine = RaceEngineerAI(engineer)
     ai_engine.ptt_controller = PushToTalkController(ai_engine, key_char="v")
 
-    print("=" * 60)
-    print("TELEMETRY BACKEND ONLINE!")
-    print(f"Dashboard: https://tugamer89.github.io/AC-Virtual-Engineer/?pin={pin}")
-    print(f"AUTHENTICATION PIN: {pin}")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("TELEMETRY BACKEND ONLINE!")
+    logger.info(
+        f"Dashboard: https://tugamer89.github.io/AC-Virtual-Engineer/?pin={pin}"
+    )
+    logger.info(f"AUTHENTICATION PIN: {pin}")
+    logger.info("=" * 60)
 
     # Dispatch background telemetry loop
     task = asyncio.create_task(broadcast_telemetry(ac_client, engineer))
