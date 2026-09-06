@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.2](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.3.1...v0.3.2) (2026-09-06)
+
+
+### Bug Fixes
+
+* **ai_engineer:** secure temporary audio file creation ([#69](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/69)) ([23e52e2](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/23e52e24ac87892e48a7d728d10e0d6cabd818b3))
+* **server:** remove fallback credentials and enforce environment variables ([#68](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/68)) ([09b5dec](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/09b5decad5e127e66f164aedae1da4e056f978bd))
+
+
+### Performance Improvements
+
+* **ai-engineer:** make ollama health check asynchronous ([#73](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/73)) ([9872ce1](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/9872ce13b71784ce696345aa6108e4db3f347ebe))
+* **ai-engineer:** make ollama health check asynchronous ([#75](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/75)) ([22e0301](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/22e03011b4b369242dc8c41da14488a5957362ce))
+* **backend:** use persistent tts worker process to optimize initialization overhead ([#72](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/72)) ([2523d1e](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/2523d1eb0889219afc88e5fed9c7f97b9f6e81a2))
+* **frontend:** extract formatter functions outside component ([#65](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/65)) ([3b6d3ee](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/3b6d3eee63a49caf5590a239086b50e0f9884de5))
+* **virtual-engineer:** make tts worker persistent to reduce latency ([#70](https://github.com/Tugamer89/AC-Virtual-Engineer/issues/70)) ([2369e37](https://github.com/Tugamer89/AC-Virtual-Engineer/commit/2369e37ee63a4d0b76bbb225c1be2b9c9d116c4d))
+
 ## [0.3.1](https://github.com/Tugamer89/AC-Virtual-Engineer/compare/v0.3.0...v0.3.1) (2026-09-02)
 
 
