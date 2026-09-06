@@ -1,6 +1,9 @@
+import logging
 import sys
 
 import pyttsx3
+
+logger = logging.getLogger(__name__)
 
 
 def speak(text: str):
@@ -16,7 +19,7 @@ def speak(text: str):
         engine.say(text)
         engine.runAndWait()
     except Exception as e:
-        print(f"TTS Worker Error: {e}")
+        logger.exception("TTS Worker Error: %s", e)
 
 
 if __name__ == "__main__" and len(sys.argv) > 1:
