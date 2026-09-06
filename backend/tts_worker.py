@@ -19,7 +19,7 @@ def speak(text: str):
         engine.say(text)
         engine.runAndWait()
     except Exception as e:
-        logger.error(f"TTS Worker Error: {e}")
+        logger.error("TTS Worker Error: %s", e)
 
 
 if __name__ == "__main__" and len(sys.argv) > 1:
