@@ -1,16 +1,15 @@
 import atexit
+import asyncio
 import logging
 import os
 import queue
 import subprocess
 import sys
 import threading
-import time
-import urllib.error
-import urllib.request
 import wave
 from typing import Any, Optional
 
+import httpx
 import numpy as np
 import ollama
 import sounddevice as sd
@@ -28,18 +27,19 @@ class OllamaManager:
         self.api_url = f"http://{host}:{port}/api/tags"
         self.process: Optional[subprocess.Popen] = None
 
-    def is_running(self) -> bool:
+    async def is_running(self) -> bool:
         """Checks if the Ollama API is currently responding."""
         try:
-            # A simple GET request to check if the server is up
-            urllib.request.urlopen(self.api_url, timeout=1.0)
-            return True
-        except (urllib.error.URLError, ConnectionError):
+            async with httpx.AsyncClient() as client:
+                # A simple GET request to check if the server is up
+                await client.get(self.api_url, timeout=1.0)
+                return True
+        except httpx.RequestError:
             return False
 
-    def start(self) -> None:
+    async def start(self) -> None:
         """Starts the Ollama server in a headless subprocess if not already running."""
-        if self.is_running():
+        if await self.is_running():
             logger.info("Ollama server is already running. Skipping startup.")
             return
 
@@ -60,12 +60,12 @@ class OllamaManager:
 
             # Polling to ensure the server is ready before returning
             for _ in range(15):
-                if self.is_running():
+                if await self.is_running():
                     logger.info("Ollama background process is ready and responding.")
                     # Ensure cleanup only if we started the process
                     atexit.register(self.stop)
                     return
-                time.sleep(1)
+                await asyncio.sleep(1)
 
             logger.error("Failed to detect Ollama server startup within timeout.")
 
@@ -94,7 +94,6 @@ class RaceEngineerAI:
         self.ptt_controller: Optional[PushToTalkController] = None
 
         self.ollama_manager = OllamaManager()
-        self.ollama_manager.start()
 
         logger.info("Initializing STT Engine (faster-whisper)...")
         try:
@@ -111,6 +110,10 @@ class RaceEngineerAI:
         self.audio_queue: queue.Queue = queue.Queue()
         self._start_processing_thread()
         logger.info("AI Engineer background thread running.")
+
+    async def initialize_ollama(self) -> None:
+        """Initializes the Ollama manager asynchronously."""
+        await self.ollama_manager.start()
 
     def _start_processing_thread(self) -> None:
         """Starts a daemon thread to process audio without blocking WebRTC loops."""

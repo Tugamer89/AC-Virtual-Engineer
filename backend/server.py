@@ -97,6 +97,9 @@ async def signaling_server() -> None:
     ac_client = ACUDPClient()
     engineer = VirtualEngineerLogic()
     ai_engine = RaceEngineerAI(engineer)
+    ollama_task = asyncio.create_task(ai_engine.initialize_ollama())
+    background_tasks.add(ollama_task)
+    ollama_task.add_done_callback(background_tasks.discard)
     ai_engine.ptt_controller = PushToTalkController(ai_engine, key_char="v")
 
     print("=" * 60)
