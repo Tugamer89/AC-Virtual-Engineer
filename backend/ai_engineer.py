@@ -59,16 +59,20 @@ class OllamaManager:
                 **kwargs,
             )
 
-            # Polling to ensure the server is ready before returning
-            for _ in range(15):
-                if self.is_running():
-                    logger.info("Ollama background process is ready and responding.")
-                    # Ensure cleanup only if we started the process
-                    atexit.register(self.stop)
-                    return
-                time.sleep(1)
+            def _poll() -> None:
+                # Polling to ensure the server is ready before returning
+                for _ in range(15):
+                    if self.is_running():
+                        logger.info(
+                            "Ollama background process is ready and responding."
+                        )
+                        # Ensure cleanup only if we started the process
+                        atexit.register(self.stop)
+                        return
+                    time.sleep(1)
+                logger.error("Failed to detect Ollama server startup within timeout.")
 
-            logger.error("Failed to detect Ollama server startup within timeout.")
+            threading.Thread(target=_poll, daemon=True).start()
 
         except FileNotFoundError:
             logger.error(
