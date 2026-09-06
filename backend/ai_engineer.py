@@ -5,6 +5,7 @@ import os
 import queue
 import subprocess
 import sys
+import tempfile
 import threading
 import wave
 from typing import Any, Optional
@@ -242,7 +243,13 @@ class PushToTalkController:
             return
 
         audio_np = np.concatenate(self.audio_data, axis=0)
-        file_path = "temp_radio_transmission.wav"
+
+        # Use a securely generated temporary file
+        temp_file = tempfile.NamedTemporaryFile(
+            suffix=".wav", prefix="radio_transmission_", delete=False
+        )
+        file_path = temp_file.name
+        temp_file.close()
 
         with wave.open(file_path, "wb") as wf:
             wf.setnchannels(1)
