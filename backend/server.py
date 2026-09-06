@@ -114,8 +114,13 @@ async def signaling_server() -> None:
 
     tls_context = ssl.create_default_context()
     mqtt_host = os.environ.get("MQTT_HOST", "127.0.0.1")
-    mqtt_user = os.environ.get("MQTT_USERNAME", "username")
-    mqtt_pass = os.environ.get("MQTT_PASSWORD", "password")
+    mqtt_user = os.environ.get("MQTT_USERNAME")
+    mqtt_pass = os.environ.get("MQTT_PASSWORD")
+
+    if not mqtt_user or not mqtt_pass:
+        raise ValueError(
+            "MQTT_USERNAME and MQTT_PASSWORD environment variables are required and must not be empty"
+        )
 
     async with aiomqtt.Client(
         hostname=mqtt_host,
