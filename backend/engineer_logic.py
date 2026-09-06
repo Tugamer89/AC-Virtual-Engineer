@@ -75,7 +75,7 @@ class VirtualEngineerLogic:
                 self.worker.terminate()
                 self.worker.wait(timeout=1.0)
             except Exception as e:
-                logger.error(f"Failed to terminate TTS worker: {e}")
+                logger.exception(f"Failed to terminate TTS worker: {e}")
 
     def speak(self, text: str) -> None:
         """Dispatches text-to-speech to a background worker."""
