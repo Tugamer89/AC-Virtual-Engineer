@@ -50,19 +50,47 @@ class VirtualEngineerLogic:
         # State tracker for AI tool calling
         self.latest_telemetry: Optional[TelemetryData] = None
 
+        self.tts_lock = threading.Lock()
+        self.tts_process: Optional[subprocess.Popen] = None
+        self._init_tts_worker()
+
         logger.info(
             "Virtual Engineer Brain Initialized with advanced Temporal Heuristics."
         )
 
-    def _run_tts(self, text: str) -> None:
+    def _init_tts_worker(self) -> None:
         kwargs: Dict[str, Any] = {}
         if sys.platform == "win32":
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
 
         try:
-            subprocess.run([sys.executable, self.worker_script, text], **kwargs)
+            self.tts_process = subprocess.Popen(
+                [sys.executable, self.worker_script],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                bufsize=1,
+                **kwargs
+            )
+            logger.info("Persistent TTS Worker process started.")
         except Exception as e:
-            logger.exception(f"TTS Worker execution failed: {e}")
+            logger.exception(f"Failed to start persistent TTS Worker: {e}")
+
+    def _run_tts(self, text: str) -> None:
+        if not self.tts_process or self.tts_process.poll() is not None:
+            logger.warning("TTS process is not running, restarting it.")
+            self._init_tts_worker()
+
+        if self.tts_process and self.tts_process.stdin:
+            try:
+                with self.tts_lock:
+                    # Replace newlines with spaces to ensure single line per speech
+                    clean_text = text.replace('\n', ' ')
+                    self.tts_process.stdin.write(f"{clean_text}\n")
+                    self.tts_process.stdin.flush()
+            except Exception as e:
+                logger.exception(f"TTS Worker execution failed: {e}")
 
     def speak(self, text: str) -> None:
         """Dispatches text-to-speech to a background worker."""
