@@ -51,7 +51,8 @@ class OllamaManager:
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
 
         try:
-            self.process = subprocess.Popen(
+            self.process = await asyncio.to_thread(
+                subprocess.Popen,
                 ["ollama", "serve"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
