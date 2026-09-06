@@ -78,7 +78,6 @@ export default function App() {
     const client = mqtt.connect(brokerUrl, mqttOptions);
 
     client.on("connect", async () => {
-      console.log("Connected to MQTT broker, starting WebRTC negotiation...");
       client.subscribe(topicHost);
 
       const pc = new RTCPeerConnection({
@@ -87,7 +86,6 @@ export default function App() {
       pcRef.current = pc;
 
       pc.onconnectionstatechange = () => {
-        console.log("WebRTC Connection State:", pc.connectionState);
 
         if (
           pc.connectionState === "disconnected" ||
@@ -116,7 +114,6 @@ export default function App() {
 
       // Data Channel Event Handlers
       dc.onopen = () => {
-        console.log("WebRTC P2P channel opened!");
         setStatus("connected");
         setIsConnected(true);
         client.end(); // Close MQTT connection once P2P is established
@@ -127,7 +124,6 @@ export default function App() {
       };
 
       dc.onclose = () => {
-        console.log("WebRTC channel closed.");
         if (watchdogRef.current) clearTimeout(watchdogRef.current);
 
         setStatus("disconnected");
