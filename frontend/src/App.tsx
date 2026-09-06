@@ -32,6 +32,29 @@ interface TelemetryData {
 
 type ConnectionStatus = "disconnected" | "connecting" | "connected";
 
+
+// --- Formatters ---
+
+const formatGear = (gear: number): string => {
+  if (gear === -1) return "R";
+  if (gear === 0) return "N";
+  return gear.toString();
+};
+
+const formatPedal = (value: number): string => {
+  return `${Math.round(value * 100)}%`;
+};
+
+const formatTime = (ms: number): string => {
+  if (!ms || ms === 0) return "--:--.---";
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const milliseconds = ms % 1000;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}.${milliseconds
+    .toString()
+    .padStart(3, "0")}`;
+};
+
 // --- Main Component ---
 
 export default function App() {
@@ -237,28 +260,6 @@ export default function App() {
       return () => clearTimeout(connectionTimeout);
     }
   }, [pin, status, startConnection]);
-
-  // --- Formatters ---
-
-  const formatGear = (gear: number): string => {
-    if (gear === -1) return "R";
-    if (gear === 0) return "N";
-    return gear.toString();
-  };
-
-  const formatPedal = (value: number): string => {
-    return `${Math.round(value * 100)}%`;
-  };
-
-  const formatTime = (ms: number): string => {
-    if (!ms || ms === 0) return "--:--.---";
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    const milliseconds = ms % 1000;
-    return `${minutes}:${seconds.toString().padStart(2, "0")}.${milliseconds
-      .toString()
-      .padStart(3, "0")}`;
-  };
 
   // --- Interaction Handlers ---
 
