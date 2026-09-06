@@ -1,5 +1,8 @@
+import logging
 import sys
 import pyttsx3
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -35,7 +38,7 @@ def main_single(text: str):
         engine.say(text)
         engine.runAndWait()
     except Exception as e:
-        print(f"TTS Worker Error: {e}")
+        logger.exception("TTS Worker Error: %s", e)
 
 
 if __name__ == "__main__":
