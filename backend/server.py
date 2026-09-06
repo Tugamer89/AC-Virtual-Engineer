@@ -102,13 +102,11 @@ async def signaling_server() -> None:
     ollama_task.add_done_callback(background_tasks.discard)
     ai_engine.ptt_controller = PushToTalkController(ai_engine, key_char="v")
 
-    logger.info("=" * 60)
-    logger.info("TELEMETRY BACKEND ONLINE!")
-    logger.info(
-        f"Dashboard: https://tugamer89.github.io/AC-Virtual-Engineer/?pin={pin}"
-    )
-    logger.info(f"AUTHENTICATION PIN: {pin}")
-    logger.info("=" * 60)
+    print("=" * 60)
+    print("TELEMETRY BACKEND ONLINE!")
+    print(f"Dashboard: https://tugamer89.github.io/AC-Virtual-Engineer/?pin={pin}")
+    print(f"AUTHENTICATION PIN: {pin}")
+    print("=" * 60)
 
     # Dispatch background telemetry loop
     task = asyncio.create_task(broadcast_telemetry(ac_client, engineer))
@@ -117,13 +115,8 @@ async def signaling_server() -> None:
 
     tls_context = ssl.create_default_context()
     mqtt_host = os.environ.get("MQTT_HOST", "127.0.0.1")
-    mqtt_user = os.environ.get("MQTT_USERNAME")
-    mqtt_pass = os.environ.get("MQTT_PASSWORD")
-
-    if not mqtt_user or not mqtt_pass:
-        raise ValueError(
-            "MQTT_USERNAME and MQTT_PASSWORD environment variables are required and must not be empty"
-        )
+    mqtt_user = os.environ.get("MQTT_USERNAME", "username")
+    mqtt_pass = os.environ.get("MQTT_PASSWORD", "password")
 
     async with aiomqtt.Client(
         hostname=mqtt_host,

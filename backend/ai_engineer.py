@@ -5,7 +5,6 @@ import os
 import queue
 import subprocess
 import sys
-import tempfile
 import threading
 import wave
 from typing import Any, Optional
@@ -52,13 +51,16 @@ class OllamaManager:
             kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
 
         try:
-            self.process = await asyncio.to_thread(
-                subprocess.Popen,
-                ["ollama", "serve"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                **kwargs,
-            )
+
+            def _start_process() -> subprocess.Popen[Any]:
+                return subprocess.Popen(
+                    ["ollama", "serve"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    **kwargs,
+                )
+
+            self.process = await asyncio.to_thread(_start_process)
 
             # Polling to ensure the server is ready before returning
             for _ in range(15):
@@ -243,13 +245,7 @@ class PushToTalkController:
             return
 
         audio_np = np.concatenate(self.audio_data, axis=0)
-
-        # Use a securely generated temporary file
-        temp_file = tempfile.NamedTemporaryFile(
-            suffix=".wav", prefix="radio_transmission_", delete=False
-        )
-        file_path = temp_file.name
-        temp_file.close()
+        file_path = "temp_radio_transmission.wav"
 
         with wave.open(file_path, "wb") as wf:
             wf.setnchannels(1)
