@@ -3,7 +3,7 @@ import sys
 
 import pyttsx3
 
-logger = logging.getLogger("TTS_Worker")
+logger = logging.getLogger(__name__)
 
 
 def speak(text: str):
