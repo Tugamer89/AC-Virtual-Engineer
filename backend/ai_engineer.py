@@ -5,6 +5,7 @@ import queue
 import subprocess
 import sys
 import threading
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -58,16 +59,20 @@ class OllamaManager:
                 **kwargs,
             )
 
-            # Polling to ensure the server is ready before returning
-            for _ in range(15):
-                if self.is_running():
-                    logger.info("Ollama background process is ready and responding.")
-                    # Ensure cleanup only if we started the process
-                    atexit.register(self.stop)
-                    return
-                time.sleep(1)
+            def _poll() -> None:
+                # Polling to ensure the server is ready before returning
+                for _ in range(15):
+                    if self.is_running():
+                        logger.info(
+                            "Ollama background process is ready and responding."
+                        )
+                        # Ensure cleanup only if we started the process
+                        atexit.register(self.stop)
+                        return
+                    time.sleep(1)
+                logger.error("Failed to detect Ollama server startup within timeout.")
 
-            logger.error("Failed to detect Ollama server startup within timeout.")
+            threading.Thread(target=_poll, daemon=True).start()
 
         except FileNotFoundError:
             logger.error(
@@ -238,7 +243,11 @@ class PushToTalkController:
             return
 
         audio_np = np.concatenate(self.audio_data, axis=0)
-        file_path = "temp_radio_transmission.wav"
+
+        # Use a securely generated temporary file
+        temp_file = tempfile.NamedTemporaryFile(suffix=".wav", prefix="radio_transmission_", delete=False)
+        file_path = temp_file.name
+        temp_file.close() # Close the file descriptor, as wave.open will open it again
 
         with wave.open(file_path, "wb") as wf:
             wf.setnchannels(1)
