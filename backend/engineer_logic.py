@@ -50,8 +50,10 @@ class VirtualEngineerLogic:
         # State tracker for AI tool calling
         self.latest_telemetry: Optional[TelemetryData] = None
 
+        # TTS Worker Initialization (processo unico persistente)
         self.tts_lock = threading.Lock()
         self.tts_process: Optional[subprocess.Popen] = None
+        self.worker: Optional[subprocess.Popen] = None
         self._init_tts_worker()
 
         logger.info(
@@ -71,13 +73,30 @@ class VirtualEngineerLogic:
                 stderr=subprocess.DEVNULL,
                 text=True,
                 bufsize=1,
-                **kwargs
+                **kwargs,
             )
+            self.worker = self.tts_process
             logger.info("Persistent TTS Worker process started.")
         except Exception as e:
             logger.exception(f"Failed to start persistent TTS Worker: {e}")
 
-    def _run_tts(self, text: str) -> None:
+    def __del__(self) -> None:
+        proc = getattr(self, "tts_process", None) or getattr(self, "worker", None)
+        if proc and proc.poll() is None:
+            try:
+                proc.terminate()
+                proc.wait(timeout=1.0)
+            except Exception as e:
+                logger.exception(f"Failed to terminate TTS worker: {e}")
+
+    def speak(self, text: str) -> None:
+        """Dispatches text-to-speech to a background worker."""
+        if not text:
+            return
+
+        logger.info(f"[ENGINEER COMMS]: {text}")
+
+        # Auto-restart del worker se non attivo o terminato inaspettatamente
         if not self.tts_process or self.tts_process.poll() is not None:
             logger.warning("TTS process is not running, restarting it.")
             self._init_tts_worker()
@@ -85,18 +104,17 @@ class VirtualEngineerLogic:
         if self.tts_process and self.tts_process.stdin:
             try:
                 with self.tts_lock:
-                    # Replace newlines with spaces to ensure single line per speech
-                    clean_text = text.replace('\n', ' ')
+                    clean_text = text.replace("\n", " ").strip()
                     self.tts_process.stdin.write(f"{clean_text}\n")
                     self.tts_process.stdin.flush()
             except Exception as e:
-                logger.exception(f"TTS Worker execution failed: {e}")
+                logger.exception(f"Failed to send text to TTS worker: {e}")
+        else:
+            logger.error("TTS worker is not running.")
 
-    def speak(self, text: str) -> None:
-        """Dispatches text-to-speech to a background worker."""
-        logger.info(f"[ENGINEER COMMS]: {text}")
-
-        threading.Thread(target=self._run_tts, args=(text,), daemon=True).start()
+    def _run_tts(self, text: str) -> None:
+        """Alias per retrocompatibilità con branch jules."""
+        self.speak(text)
 
     def _can_warn(self, warning_type: str, current_time: float) -> bool:
         """Checks if a specific warning type is off cooldown."""
@@ -128,17 +146,14 @@ class VirtualEngineerLogic:
         start_key = f"{event_key}_start"
 
         if condition:
-            # Event just started
             if math.isclose(self.event_durations[start_key], 0.0, abs_tol=1e-4):
                 self.event_durations[start_key] = current_time
-            # Event has been sustained past the threshold
             elif current_time - self.event_durations[
                 start_key
             ] > sustain_time and self._can_warn(event_key, current_time):
                 self.speak(message)
                 self._update_cooldown(event_key, current_time)
         else:
-            # Condition broken, reset tracker
             self.event_durations[start_key] = 0.0
 
     def analyze(self, telemetry: TelemetryData) -> None:
@@ -149,7 +164,6 @@ class VirtualEngineerLogic:
         self.latest_telemetry = telemetry
         current_time = time.time()
 
-        # Extract telemetry data safely
         slip = telemetry.get("slip_angle", [0.0, 0.0, 0.0, 0.0])
         speed = telemetry.get("speed_kmh", 0.0)
         gear = telemetry.get("gear", 0)
@@ -157,11 +171,9 @@ class VirtualEngineerLogic:
         rpm = telemetry.get("engine_rpm", 0.0)
         max_rpm = telemetry.get("max_rpm", 8000.0)
 
-        # Raw Average slip calculations (0,1 = Front | 2,3 = Rear)
         raw_front_slip = (abs(slip[0]) + abs(slip[1])) / 2.0
         raw_rear_slip = (abs(slip[2]) + abs(slip[3])) / 2.0
 
-        # Smoothed values via EMA to filter out 60Hz noise
         ema_front_slip = self._update_ema("front_slip", raw_front_slip)
         ema_rear_slip = self._update_ema("rear_slip", raw_rear_slip)
         ema_brake = self._update_ema("brake", brake)
@@ -198,7 +210,7 @@ class VirtualEngineerLogic:
             current_time=current_time,
         )
 
-        # 4. Over-revving Detection (Immediate trigger, no sustain tracking required)
+        # 4. Over-revving Detection
         if (
             rpm > max_rpm * 0.98
             and gear > 0
@@ -220,7 +232,6 @@ class VirtualEngineerLogic:
         speed = round(t.get("speed_kmh", 0))
         gear = t.get("gear", 0)
 
-        # Helper to convert ms to standard m:s.ms timing
         def format_time(ms_val):
             if ms_val <= 0:
                 return "N/A"
