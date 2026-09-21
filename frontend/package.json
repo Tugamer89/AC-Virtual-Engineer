@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "lucide-react": "^1.46.0",
-    "mqtt": "^5.15.2",
+    "lucide-react": "^1.47.0",
+    "mqtt": "^5.16.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
@@ -23,7 +23,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.6.1",
-    "eslint": "^10.10.0",
+    "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
     "eslint-plugin-simple-import-sort": "^14.0.0",
