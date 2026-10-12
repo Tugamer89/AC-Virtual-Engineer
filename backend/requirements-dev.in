@@ -4,5 +4,4 @@ black
 flake8
 mypy
 pyinstaller
-setuptools
 tomli
