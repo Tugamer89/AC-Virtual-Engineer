@@ -1,0 +1,33 @@
+name: Fix Dependabot uv hashes
+
+on:
+  pull_request:
+    paths:
+      - 'backend/requirements.txt'
+
+jobs:
+  fix-hashes:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }} 
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.0
+
+      - name: Recompile requirements with uv
+        run: |
+          uv pip compile backend/requirements.in -o backend/requirements.txt --generate-hashes
+          uv pip compile backend/requirements-dev.in -o backend/requirements-dev.txt --generate-hashes
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add backend/requirements*.txt
+          git commit -m "chore: recompile with uv to include setuptools hashes" || exit 0
+          git push
