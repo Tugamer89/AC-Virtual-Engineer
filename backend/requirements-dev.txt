@@ -350,6 +350,7 @@ setuptools==84.0.0 \
     --hash=sha256:f4695c21257f0d9b537ec2692c941d02ee143b7cc1276941349a546573b2ef73
     # via
     #   -c backend/requirements.txt
+    #   -r backend/requirements-dev.in
     #   pyinstaller
 tomli==2.4.1 \
     --hash=sha256:01f520d4f53ef97964a240a035ec2a869fe1a37dde002b57ebc4417a27ccd853 \
